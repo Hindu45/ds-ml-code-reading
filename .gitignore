@@ -39,4 +39,8 @@ htmlcov/
 
 # local
 _ideation/**
+_explanations/**
+.claude/**
+CLAUDE.md
 wine-review/**
+github_users/**
