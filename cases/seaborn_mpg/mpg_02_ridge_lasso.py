@@ -1,4 +1,4 @@
-"""
+""" [Standalone Script: No #%% cells]
 Research question: Can we predict a car's fuel efficiency (mpg) from engine and body specs?
 python -m linear_regression.mpg_01_ridge_lasso
 """
@@ -13,7 +13,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 
-from linear_regression.utils import (
+from cases.utils.regression_helpers import (
     make_ridge,
     ridge_grid, lasso_grid,
     plot_error_curves, plot_coef_paths, plot_pred_vs_actual,
@@ -124,6 +124,7 @@ plot_error_curves(
     save_path=PLOT_DIR / "mpg_error_curves.png",
     ylabel="RMSE (mpg)",
 )
+print(f"Saved: {PLOT_DIR / 'mpg_error_curves.png'}")
 
 # --- Coefficient paths ------------------------------------------------------
 ridge_paths = np.array([
@@ -146,6 +147,7 @@ plot_coef_paths(
     feature_names=feature_names,
     save_path=PLOT_DIR / "mpg_coef_paths.png",
 )
+print(f"Saved: {PLOT_DIR / 'mpg_coef_paths.png'}")
 
 # --- Final evaluation on test set -------------------------------------------
 model_ols_final   = make_ridge(0.0,          len(y_trainval_s)).fit(X_trainval_s, y_trainval_s)
@@ -171,3 +173,4 @@ plot_pred_vs_actual(
     save_path=PLOT_DIR / "mpg_pred_vs_actual.png",
     alpha = 0.8
 )
+print(f"Saved: {PLOT_DIR / 'mpg_pred_vs_actual.png'}")

@@ -1,0 +1,10 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.activateEnvInCurrentTerminal": true,
+    "explorer.excludeGitIgnore": false,
+    "search.useIgnoreFiles": false,
+    "jupyter.launchTimeout": 60000, // extend kernel startup timeout (default ~15s too short on Windows + venv)
+    "jupyter.interactiveWindow.textEditor.executeSelection": true, // run selected lines without needing a full cell
+    "jupyter.askForKernelRestart": false // skip confirmation dialog on restart (faster recovery from hangs)
+}

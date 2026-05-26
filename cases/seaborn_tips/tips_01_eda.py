@@ -7,8 +7,8 @@ Questions (increasing complexity):
      still present, or does it disappear?
 """
 
-# %% Setup
-"""
+# %%
+""" [1] Setup
 Load the tips dataset and engineer the target variable: tip_pct = tip / total_bill * 100.
 Print a quick sanity check (shape, dtypes, missing values) and flag the one known
 duplicate row before any analysis.
@@ -24,16 +24,15 @@ PLOT_DIR.mkdir(exist_ok=True)
 tips = sns.load_dataset("tips")
 tips["tip_pct"] = tips["tip"] / tips["total_bill"] * 100
 
+print(f"Shape: {tips.shape}   Duplicates: {tips.duplicated().sum()}")
 print(tips.dtypes)
-print(f"\nDuplicates: {tips.duplicated().sum()}")
-print(tips["tip_pct"].describe().round(2))
 
 
-# %% Tip vs total bill
-"""
+# %%
+""" [2] Tip vs total bill
 Before normalising, look at the raw relationship: does tip scale linearly with
-the bill?  A regression line through the scatter reveals the implied average tip
-rate (slope ≈ tip / bill).  This motivates why tip_pct is a better response
+the bill?  A regression line through the scatter reveals the marginal tip
+rate (slope = Δtip / Δbill; note this is not the average tip rate, which is mean(tip)/mean(bill)).  This motivates why tip_pct is a better response
 variable than raw tip — if the slope were perfectly consistent, all points would
 lie on one line and there would be nothing to explain.
 """
@@ -54,13 +53,12 @@ ax.legend()
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "tips_tip_vs_bill.png")
 plt.show()
-
+print(f"Saved: {PLOT_DIR / 'tips_tip_vs_bill.png'}")
 print(f"OLS: tip = {intercept:.2f} + {slope:.3f} × total_bill")
-print("Residual spread around this line is what tip_pct captures.")
 
 
-# %% Q1 — Distribution of tip percentage
-"""
+# %%
+""" [3] Q1 — Distribution of tip percentage
 Histogram + KDE to judge shape (skew, modality) and a box plot to read off
 the median and IQR at a glance.  Vertical lines mark the mean and median so
 students can see whether they diverge — a sign of skew.
@@ -84,10 +82,12 @@ ax.set_title("Tip percentage — box plot")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "tips_tip_pct_distribution.png")
 plt.show()
+print(f"Saved: {PLOT_DIR / 'tips_tip_pct_distribution.png'}")
+print(f"tip_pct: mean={tips['tip_pct'].mean():.1f}%  median={tips['tip_pct'].median():.1f}%  std={tips['tip_pct'].std():.1f}%")
 
 
-# %% Q2 — Tip rate by categorical variables
-"""
+# %%
+""" [4] Q2 — Tip rate by categorical variables
 Four side-by-side box plots — one per categorical predictor (sex, smoker, day, time).
 Box plots reveal median differences and spread without hiding the shape.
 Overlaid strip plots (jitter) let students see the actual data points, which is
@@ -109,14 +109,13 @@ fig.suptitle("Tip percentage by categorical predictors", y=1.02)
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "tips_tip_pct_by_category.png")
 plt.show()
-
-# Numeric summary to complement the visual
+print(f"Saved: {PLOT_DIR / 'tips_tip_pct_by_category.png'}")
 print(tips.groupby("sex")["tip_pct"].describe().round(2))
 print(tips.groupby("smoker")["tip_pct"].describe().round(2))
+print(tips.groupby("day")["tip_pct"].describe().round(2))
 
-
-# %% Bill size by day and time
-"""
+# %%
+""" [5] Bill size by day and time
 If day or time affects tip_pct (seen in Q2), one explanation is that people
 order bigger meals on certain days/at certain times, and bill size itself
 drives the tip rate.  Box plots of total_bill by day and time let us check
@@ -145,13 +144,13 @@ fig.suptitle("Is bill size different across days / meal times?")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "tips_bill_by_day_time.png")
 plt.show()
-
+print(f"Saved: {PLOT_DIR / 'tips_bill_by_day_time.png'}")
 print(tips.groupby("day")["total_bill"].median().round(2))
 print(tips.groupby("time")["total_bill"].median().round(2))
 
 
-# %% Smoker × sex interaction
-"""
+# %%
+""" [6] Smoker × sex interaction
 Main effects (Q2) can mask interactions: perhaps female smokers tip very
 differently from male smokers even though neither sex nor smoker alone shows a
 strong signal.  A 2×2 heatmap of mean tip_pct makes the interaction pattern
@@ -161,7 +160,6 @@ interaction effect.
 pivot_interaction = tips.pivot_table(
     values="tip_pct", index="smoker", columns="sex", aggfunc="mean"
 )
-print(pivot_interaction.round(2))
 
 fig, ax = plt.subplots(figsize=(5, 3))
 im = ax.imshow(pivot_interaction.values, cmap="RdYlGn", aspect="auto",
@@ -183,10 +181,12 @@ fig.colorbar(im, ax=ax, label="Mean tip %")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "tips_smoker_sex_interaction.png")
 plt.show()
+print(f"Saved: {PLOT_DIR / 'tips_smoker_sex_interaction.png'}")
+print(pivot_interaction.round(2))
 
 
-# %% Q3 — Sex effect controlled for party size
-"""
+# %%
+""" [7] Q3 — Sex effect controlled for party size
 Party size (1–6) is a potential confounder: larger parties may tip differently
 and may skew toward one sex.  We visualise two things:
   a) tip_pct vs. size, coloured by sex — does one group cluster at certain sizes?
@@ -232,7 +232,6 @@ ax.legend(title="Sex")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "tips_sex_effect_by_size.png")
 plt.show()
-
-# Pivot table: mean tip_pct by (size, sex) — numbers behind the chart
+print(f"Saved: {PLOT_DIR / 'tips_sex_effect_by_size.png'}")
 pivot = tips.pivot_table(values="tip_pct", index="size", columns="sex", aggfunc="mean")
 print(pivot.round(2))

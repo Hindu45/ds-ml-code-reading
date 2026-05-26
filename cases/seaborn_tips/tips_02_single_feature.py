@@ -1,6 +1,10 @@
 """Research question: Can we predict the tip amount from the restaurant bill total?"""
 
-# %% Imports & config
+# %%
+""" [1] Imports & config
+Import NumPy, pandas, seaborn, matplotlib, pathlib, and sklearn.
+Define PLOT_DIR so all figures land in a predictable subfolder.
+"""
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -11,20 +15,34 @@ from sklearn.model_selection import train_test_split
 PLOT_DIR = Path(__file__).parent / "plots"
 PLOT_DIR.mkdir(exist_ok=True)
 
-# %% Load data
+# %%
+""" [2] Load data
+Load the seaborn tips dataset and print shape and summary statistics.
+Focusing on total_bill and tip — the two variables used in this script.
+"""
 df = sns.load_dataset("tips")
-print(df.head())
+print(f"Shape: {df.shape}")
 print(df[["total_bill", "tip"]].describe().round(2))
 
-# %% Train / test split  (80 / 20)
+# %%
+""" [3] Train / test split  (80 / 20)
+Reshape total_bill into a (n,1) feature matrix and split 80/20.
+The test set is held out until final evaluation so reported metrics are honest.
+"""
 X = df["total_bill"].values.reshape(-1, 1)   # shape (n, 1)
 y = df["tip"].values                          # shape (n,)
 
 X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
+print(f"train={X_train.shape}  test={X_test.shape}")
 
-# %% Standardise features — fit statistics on train only
+# %%
+""" [4] Standardise features — fit statistics on train only
+Compute mean and std on the training set only, then apply to both splits.
+Standardising puts the feature on a zero-mean, unit-variance scale so gradient
+descent converges in fewer iterations without hand-tuning the learning rate.
+"""
 mu: float = float(X_train.mean())
 sigma: float = float(X_train.std())
 
@@ -39,20 +57,33 @@ def add_bias(X: np.ndarray) -> np.ndarray:
 
 X_train_b = add_bias(X_train_s)   # shape (n_train, 2)
 X_test_b  = add_bias(X_test_s)    # shape (n_test,  2)
+print(f"mu={mu:.2f}  sigma={sigma:.2f}")
 
-# %% Loss function: Mean Squared Error
+# %%
+""" [5] Loss function: Mean Squared Error
+Define MSE as (1/n) Σ(y − ŷ)².
+Used both to track GD progress and to evaluate the final models.
+"""
 def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """MSE = (1/n) * sum((y - ŷ)²)"""
     return float(np.mean((y_true - y_pred) ** 2))
 
 
-# %% Analytical solution — Normal equation: θ = (XᵀX)⁻¹ Xᵀy
+# %%
+""" [6] Analytical solution — Normal equation: θ = (XᵀX)⁻¹ Xᵀy
+Solve exactly via lstsq (numerically stable QR decomposition).
+This gives the global optimum in one step — the target GD should converge to.
+"""
 theta_ols = np.linalg.lstsq(X_train_b, y_train, rcond=None)[0]
 
 print(f"\nOLS  intercept={theta_ols[0]:.4f}  slope={theta_ols[1]:.4f}")
 print(f"OLS  train MSE={mse(y_train, X_train_b @ theta_ols):.4f}")
 
-# %% Gradient descent from scratch
+# %%
+""" [7] Gradient descent from scratch
+Implement batch gradient descent: at each step subtract α × ∂MSE/∂θ.
+The gradient is (2/n)Xᵀ(Xθ − y).  Records MSE after each iteration for later plotting.
+"""
 def gradient_descent(
     X: np.ndarray,
     y: np.ndarray,
@@ -82,13 +113,17 @@ def gradient_descent(
 
     return theta, history
 
-
-theta_gd, loss_history = gradient_descent(X_train_b, y_train, alpha=0.1, n_iter=300)
+LEARNING_RATE = 0.1
+theta_gd, loss_history = gradient_descent(X_train_b, y_train, alpha=LEARNING_RATE, n_iter=300)
 
 print(f"\nGD   intercept={theta_gd[0]:.4f}  slope={theta_gd[1]:.4f}")
 print(f"GD   train MSE={loss_history[-1]:.4f}")
 
-# %% Visualise GD convergence — loss curve
+# %%
+""" [8] Visualise GD convergence — loss curve
+Plot training MSE vs. iteration and overlay the OLS optimum as a dashed line.
+Students can see how quickly the algorithm approaches the analytical minimum.
+"""
 fig, ax = plt.subplots(figsize=(7, 4))
 ax.plot(loss_history)
 ax.axhline(mse(y_train, X_train_b @ theta_ols), color="tab:red", linestyle="--", label="OLS optimum")
@@ -99,8 +134,14 @@ ax.legend()
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_gd_convergence.png")
 plt.show()
+print(f"Saved: {PLOT_DIR / 'linreg_tips_gd_convergence.png'}")
+print(f"GD final MSE={loss_history[-1]:.4f}  OLS MSE={mse(y_train, X_train_b @ theta_ols):.4f}")
 
-# %% Visualise GD steps — regression line at selected iterations
+# %%
+""" [9] Visualise GD steps — regression line at selected iterations
+Re-run gradient descent and snapshot the fitted line at selected iterations.
+Watching the line settle makes the convergence idea concrete.
+"""
 SNAPSHOTS = [0, 5, 20, 80, 300]
 
 fig, axes = plt.subplots(1, len(SNAPSHOTS), figsize=(14, 3), sharey=True)
@@ -128,8 +169,13 @@ fig.suptitle("GD — regression line evolution")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_gd_steps.png")
 plt.show()
+print(f"Saved: {PLOT_DIR / 'linreg_tips_gd_steps.png'}")
 
-# %% Metrics by hand: RMSE and R²
+# %%
+""" [10] Metrics by hand: RMSE and R²
+Implement RMSE (same units as the target) and R² (fraction of variance explained).
+Evaluate both OLS and GD on the held-out test set to confirm that GD matched OLS.
+"""
 def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Root Mean Squared Error — same units as the target."""
     return float(np.sqrt(mse(y_true, y_pred)))
@@ -147,7 +193,11 @@ for label, theta in [("OLS", theta_ols), ("GD ", theta_gd)]:
     y_pred = X_test_b @ theta
     print(f"{label}  RMSE={rmse(y_test, y_pred):.3f}  R²={r2(y_test, y_pred):.3f}")
 
-# %% Regression line on test data
+# %%
+""" [11] Regression line on test data
+Scatter the test points and overlay the OLS line in original (un-standardised) units.
+This is the final visual check that the model fits the held-out data reasonably.
+"""
 fig, ax = plt.subplots(figsize=(7, 5))
 ax.scatter(X_test, y_test, alpha=0.6, label="test data")
 
@@ -163,5 +213,4 @@ ax.legend()
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_fit.png")
 plt.show()
-
-# %%
+print(f"Saved: {PLOT_DIR / 'linreg_tips_fit.png'}")

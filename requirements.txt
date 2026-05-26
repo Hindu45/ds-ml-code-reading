@@ -8,3 +8,4 @@ seaborn==0.13.2
 statsmodels==0.14.6
 
 tqdm # progress bars
+ipykernel # for using interactive cells '#%%'

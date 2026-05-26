@@ -1,7 +1,11 @@
 """Research question: How much does each feature contribute to predicting tip,
 and what R² can we achieve with all available predictors?"""
 
-# %% Imports & config
+# %%
+""" [1] Imports & config
+Import NumPy, pandas, seaborn, matplotlib, pathlib, and sklearn.
+Define feature lists, permutation repeat count, and the RNG seed.
+"""
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -19,7 +23,11 @@ NUMERIC     = ["total_bill", "size"]
 N_REPEATS   = 50
 RNG         = np.random.default_rng(0)
 
-# %% Load & one-hot encode (drop_first → identifiable, avoids dummy trap)
+# %%
+""" [2] Load & one-hot encode
+Load tips, drop the raw tip column, and one-hot encode all categorical predictors.
+drop_first=True makes the design matrix identifiable by removing one redundant dummy per group.
+"""
 df = sns.load_dataset("tips")
 
 X: pd.DataFrame = pd.get_dummies(
@@ -29,17 +37,26 @@ X: pd.DataFrame = pd.get_dummies(
     dtype=float,
 )
 y = df["tip"].values
-# y = df["tip"].values / X["total_bill"].values
+# y = df["tip"].values / X["total_bill"].values * 100 # tip_pct
 
 print("Features after encoding:")
 print(X.columns.tolist())
 
-# %% Train / test split
+# %%
+""" [3] Train / test split
+Split the encoded feature matrix and tip target 80/20.
+The test set is held out until final evaluation so reported metrics are honest.
+"""
 X_train, X_test, y_train, y_test = train_test_split(
     X.values, y, test_size=0.2, random_state=42
 )
+print(f"train={X_train.shape}  test={X_test.shape}")
 
-# %% Fit & baseline R²
+# %%
+""" [4] Fit & baseline R²
+Fit sklearn LinearRegression on the training set and compute R² on both splits.
+The train/test gap is one overfitting signal, but on small datasets it can be misleadingly small; comparing test R² against a simpler single-feature baseline is an equally important check.
+"""
 model = LinearRegression()
 model.fit(X_train, y_train)
 
@@ -49,8 +66,12 @@ r2_test  = r2_score(y_test,  model.predict(X_test))
 print(f"\nR² train = {r2_train:.3f}")
 print(f"R² test  = {r2_test:.3f}")
 
-# %% Regression coefficients — OLS solution
-# Features kept in dataset order so encoded dummies of the same original variable stay adjacent.
+# %%
+""" [5] Regression coefficients — OLS solution
+Extract and plot raw OLS coefficients — one bar per encoded column.
+Raw-scale coefficients show direction but are not comparable across features
+with different units (total_bill in $ vs. binary dummies).
+"""
 feat_names = X.columns.tolist()
 coefs = model.coef_
 
@@ -64,9 +85,16 @@ ax.tick_params(axis="x", rotation=40, labelsize=15)
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_coefficients.png")
 plt.show()
+print(f"Saved: {PLOT_DIR / 'linreg_tips_coefficients.png'}")
+top3 = sorted(zip(feat_names, coefs), key=lambda x: -abs(x[1]))[:3]
+print("Top-3 by magnitude: " + "  ".join(f"{n}={c:+.3f}" for n, c in top3))
 
-# %% Map each original feature → its column indices in X
-# Numeric: direct name match.  Categorical: all dummies share the prefix "{name}_".
+# %%
+""" [6] Map each feature → column indices in X
+Build a lookup from each original feature name to its column indices in X.
+Numeric features map to a single index; categorical features map to all their dummy columns.
+Used in the permutation importance loop to shuffle all dummies of a feature together.
+"""
 feature_groups: dict[str, list[int]] = {}
 col_list = list(X.columns)
 
@@ -76,9 +104,12 @@ for feat in NUMERIC:
 for feat in CATEGORICAL:
     feature_groups[feat] = [i for i, c in enumerate(col_list) if c.startswith(f"{feat}_")]
 
-# %% Permutation importance
-# For each feature: shuffle its columns in X_test N_REPEATS times, average the R² drop.
-# Larger drop → feature was more important.  Does not require refitting.
+# %%
+""" [7] Permutation importance
+For each feature, shuffle its columns in X_test N_REPEATS times and average the R² drop.
+A large drop means the model relied on that feature; near-zero means it was irrelevant.
+Does not require refitting — the permutation is applied to the test set only.
+"""
 importances: dict[str, float] = {}
 
 for feat, col_idx in feature_groups.items():
@@ -94,7 +125,11 @@ print("\nPermutation importance (mean R² drop):")
 for feat, imp in sorted(importances.items(), key=lambda x: -x[1]):
     print(f"  {feat:<12} {imp:+.4f}")
 
-# %% Plot feature importance
+# %%
+""" [8] Plot feature importance
+Horizontal bar chart of permutation importance, sorted ascending (least important at bottom).
+The title shows the baseline test R² for reference.
+"""
 order = sorted(importances, key=importances.get)        # ascending → bottom = least important
 values = [importances[f] for f in order]
 
@@ -106,10 +141,14 @@ ax.set_title(f"Permutation importance  (test R² = {r2_test:.3f})")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_importance.png")
 plt.show()
+print(f"Saved: {PLOT_DIR / 'linreg_tips_importance.png'}")
 
-# %% Heteroscedasticity — residuals vs. fitted values (full training set)
-# If variance is constant (homoscedastic), points scatter evenly around zero.
-# A funnel shape means larger predictions have larger errors → assumption violated.
+# %%
+""" [9] Heteroscedasticity — residuals vs. fitted values (full training set)
+Plot residuals (actual − predicted) against fitted values on the training set.
+Constant vertical spread (homoscedasticity) is a key OLS assumption.
+A funnel shape means variance grows with the fitted value, violating the assumption.
+"""
 y_hat = model.predict(X_train)
 residuals = y_train - y_hat
 
@@ -122,21 +161,13 @@ ax.set_title("Residuals vs. fitted — heteroscedasticity check")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_residuals.png")
 plt.show()
+print(f"residuals: mean={residuals.mean():.3f}  std={residuals.std():.3f}  |max|={np.abs(residuals).max():.3f}")
+print(f"Saved: {PLOT_DIR / 'linreg_tips_residuals.png'}")
 
-# %% Partial regression plot — size controlling for all other features (Frisch-Waugh-Lovell)
-"""
-To isolate the effect of `size` we residualise both variables against
-*all other regressors* (not just total_bill — that was the bug):
-
-  1. Regress size ~ all other features  → residuals e_size
-     (the part of party size *not* explained by anything else)
-  2. Regress tip  ~ all other features  → residuals e_tip
-     (the part of the tip *not* explained by anything else)
-  3. Plot e_tip vs e_size — the slope now equals the `size` coefficient
-     in the full multiple regression exactly (Frisch-Waugh-Lovell theorem).
-
-The question becomes: for parties of *unexpected* size given everything else,
-do they tip more or less than expected?
+# %%
+""" [10] Partial regression: size | all controls (Frisch-Waugh-Lovell)
+Residualise both size and tip against all other features, then regress the residuals.
+By Frisch-Waugh-Lovell, the slope equals the size coefficient in the full model exactly.
 """
 size_idx       = col_list.index("size")
 X_train_others = np.delete(X_train, size_idx, axis=1)   # all columns except size, train only
@@ -145,8 +176,6 @@ e_size = X_train[:, size_idx] - LinearRegression().fit(X_train_others, X_train[:
 e_tip  = y_train - LinearRegression().fit(X_train_others, y_train).predict(X_train_others)
 
 slope_fwl = LinearRegression().fit(e_size.reshape(-1, 1), e_tip).coef_[0]
-print(f"\nFWL slope for size : {slope_fwl:.4f}")
-print(f"Full-model coef    : {model.coef_[size_idx]:.4f}  (should match)")
 
 fig, ax = plt.subplots(figsize=(6, 5))
 ax.scatter(e_size, e_tip, alpha=0.5, s=18)
@@ -160,14 +189,18 @@ ax.set_title("Partial regression: size | all controls")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_tips_partial_size.png")
 plt.show()
+print(f"FWL slope for size: {slope_fwl:.4f}  (full-model coef: {model.coef_[size_idx]:.4f})")
+print(f"Saved: {PLOT_DIR / 'linreg_tips_partial_size.png'}")
 
-# %% Standardised coefficients (post-hoc, no refit needed)
-# β_std_j = β_j × (σ_xj / σ_y)  →  units: std(y) per std(x_j)
-# Allows direct magnitude comparison across features.
+# %%
+""" [11] Standardised coefficients (post-hoc, no refit needed)
+Multiply each raw coefficient by σ_xj / σ_y to put all predictors on a common scale.
+β_std_j is interpretable as: a one-std change in x_j shifts tip by β_std_j standard deviations.
+"""
 std_X = X_train.std(axis=0)
 std_y = float(y_train.std())
 beta_std = model.coef_ * std_X / std_y
 
-print("\nStandardised coefficients:")
-for name, b in sorted(zip(col_list, beta_std), key=lambda x: -abs(x[1])):
+print("\nStandardised coefficients (top 4 by magnitude):")
+for name, b in sorted(zip(col_list, beta_std), key=lambda x: -abs(x[1]))[:4]:
     print(f"  {name:<20} {b:+.4f}")

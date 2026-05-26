@@ -1,6 +1,7 @@
 """Research question: Can we predict diamond price from cut, color, clarity, and physical dimensions?"""
 
-# %% Imports & config
+# %%
+""" [1] Imports & config"""
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -12,8 +13,8 @@ PLOT_DIR.mkdir(exist_ok=True)
 NUMERIC_COLS = ["carat", "depth", "table", "x", "y", "z"]
 CAT_COLS     = ["cut", "color", "clarity"]
 
-# %% Load & inspect
-"""
+# %%
+""" [2] Load & inspect
 53,940 rows — one per diamond.
 Numeric: carat, depth (%), table (%), x/y/z (mm dimensions).
 Categorical: cut (5 grades), color (7 grades D–J), clarity (8 grades).
@@ -29,8 +30,8 @@ print("\nZero-dimension rows:", (df[["x", "y", "z"]] == 0).any(axis=1).sum())
 df = df[(df[["x", "y", "z"]] > 0).all(axis=1)].copy()
 print(f"After cleanup: {len(df):,} rows")
 
-# %% EDA — price distribution
-"""
+# %%
+""" [3] EDA — price distribution
 Price is strongly right-skewed; a log transform yields a near-normal shape.
 We model the raw price to keep predictions in USD, but show both scales.
 """
@@ -46,9 +47,11 @@ axes[1].set_title("Price — log scale")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "diamonds_price_dist.png")
 plt.show()
+print(f"Price — median: ${df['price'].median():,.0f}   mean: ${df['price'].mean():,.0f}")
+print(f"Saved: {PLOT_DIR / 'diamonds_price_dist.png'}")
 
-# %% EDA — correlation heatmap
-"""
+# %%
+""" [4] EDA — correlation heatmap
 carat, x, y, z are near-perfectly collinear (all measure stone size).
 This multicollinearity inflates OLS variance — the core motivation for Ridge.
 """
@@ -67,9 +70,12 @@ ax.set_title("Correlation matrix — numerics + price")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "diamonds_corr_heatmap.png")
 plt.show()
+corr_price = df[NUMERIC_COLS + ["price"]].corr()["price"].drop("price").sort_values(ascending=False).round(2)
+print(corr_price.to_string())
+print(f"Saved: {PLOT_DIR / 'diamonds_corr_heatmap.png'}")
 
-# %% EDA — price by categorical features
-"""
+# %%
+""" [5] EDA — price by categorical features
 Counterintuitive pattern: Fair-cut diamonds often have higher median price than
 Ideal-cut diamonds. Reason: carat and cut are correlated — larger stones are more
 likely to receive lower-grade cuts. The model must learn this joint structure.
@@ -86,8 +92,13 @@ for ax, col in zip(axes, CAT_COLS):
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "diamonds_price_by_cat.png")
 plt.show()
+fair_med  = df[df["cut"] == "Fair"]["price"].median()
+ideal_med = df[df["cut"] == "Ideal"]["price"].median()
+print(f"Cut paradox — Fair median: ${fair_med:,.0f}  Ideal median: ${ideal_med:,.0f}")
+print(f"Saved: {PLOT_DIR / 'diamonds_price_by_cat.png'}")
 
-# %% EDA — carat vs price
+# %%
+""" [6] EDA — carat vs price"""
 fig, ax = plt.subplots(figsize=(7, 5))
 ax.scatter(df["carat"], df["price"], alpha=0.05, s=5)
 ax.set_xlabel("Carat")
@@ -96,3 +107,6 @@ ax.set_title("Price vs. carat — non-linear relationship visible")
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "diamonds_price_vs_carat.png")
 plt.show()
+corr_cp = np.corrcoef(df["carat"], df["price"])[0, 1]
+print(f"r(carat, price): {corr_cp:.3f}")
+print(f"Saved: {PLOT_DIR / 'diamonds_price_vs_carat.png'}")

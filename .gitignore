@@ -24,23 +24,25 @@ venv/
 # Testing
 .pytest_cache/
 .coverage
-htmlcov/
 
 # IDE
-.vscode/
+.vscode/*.code-workspace
 .idea/
 *.iml
 
-
-# TEMP
 *.csv
+
+# plotting and figures
 *.png
 *.odg
+plots/
 
 # local
-_ideation/**
-_explanations/**
-.claude/**
+_local/
+_tmp/
+_dataset-analyses/
+_discussion.md
+_output.md
+
+.claude/
 CLAUDE.md
-wine-review/**
-github_users/**

@@ -164,7 +164,9 @@ def plot_pred_vs_actual(
     predictions: list[tuple[str, np.ndarray]],
     y_test: np.ndarray,
     save_path: Path,
-    alpha: float=0.05
+    alpha: float = 0.05,
+    xlabel: str = "Actual",
+    ylabel: str = "Predicted",
 ) -> None:
     """Scatter plot of predicted vs. actual values for each model.
 
@@ -172,18 +174,57 @@ def plot_pred_vs_actual(
         predictions: List of (label, y_pred) tuples in original (unscaled) units.
         y_test: Ground-truth test targets in original units.
         save_path: File path for the saved PNG.
+        alpha: Point transparency.
+        xlabel: X-axis label (e.g. "Actual price (USD)").
+        ylabel: Y-axis label (e.g. "Predicted price (USD)").
     """
     fig, axes = plt.subplots(1, len(predictions), figsize=(5.5 * len(predictions), 5))
     if len(predictions) == 1:
         axes = [axes]
     for ax, (label, y_pred) in zip(axes, predictions):
-        lo = min(float(y_test.min()), float(y_pred.min()))
-        hi = max(float(y_test.max()), float(y_pred.max()))
         ax.scatter(y_test, y_pred, alpha=alpha, s=5)
-        ax.plot([lo, hi], [lo, hi], "r--", linewidth=1)
-        ax.set_xlabel("Actual")
-        ax.set_ylabel("Predicted")
+        # Diagonal drawn within scatter-established limits; avoids axis expansion
+        # when the model predicts out-of-domain values (e.g. negative prices).
+        x0, x1 = ax.get_xlim()
+        y0, y1 = ax.get_ylim()
+        ax.plot([max(x0, y0), min(x1, y1)], [max(x0, y0), min(x1, y1)], "r--", linewidth=1)
+        ax.set_xlim(x0, x1)
+        ax.set_ylim(y0, y1)
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
         ax.set_title(f"{label} — predicted vs. actual (test)")
+    fig.tight_layout()
+    fig.savefig(save_path)
+    plt.show()
+
+
+def plot_prediction_distributions(
+    train_pred: np.ndarray,
+    test_pred: np.ndarray,
+    save_path: Path,
+    xlabel: str = "Predicted value",
+    bins: int = 60,
+) -> None:
+    """Histogram of train and test predictions; region below 0 shaded red.
+
+    Args:
+        train_pred: Model predictions on the training set.
+        test_pred: Model predictions on the test set.
+        save_path: File path for the saved PNG.
+        xlabel: X-axis label (include units, e.g. "Predicted price (USD)").
+        bins: Number of histogram bins.
+    """
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.hist(train_pred, bins=bins, alpha=0.5, label="train", color="tab:blue")
+    ax.hist(test_pred,  bins=bins, alpha=0.5, label="test",  color="tab:orange")
+    all_pred = np.concatenate([train_pred, test_pred])
+    if all_pred.min() < 0:
+        ax.axvspan(all_pred.min(), 0, color="red", alpha=0.2, label="Impossible (< 0)")
+        ax.axvline(0, color="red", linewidth=1, linestyle="--")
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel("Count")
+    ax.set_title("Predicted value distributions — train vs. test")
+    ax.legend()
     fig.tight_layout()
     fig.savefig(save_path)
     plt.show()

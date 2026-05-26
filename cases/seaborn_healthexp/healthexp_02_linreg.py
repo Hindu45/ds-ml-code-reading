@@ -1,6 +1,7 @@
 """Research question: Does healthcare spending predict life expectancy across six countries?"""
 
-# %% Imports & config
+# %%
+""" [1] Imports & config"""
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -18,8 +19,8 @@ NUMERIC     = ["Year", "Spending_USD"]
 N_REPEATS   = 50
 RNG         = np.random.default_rng(0)
 
-# %% Load & explore
-"""
+# %%
+""" [2] Load & explore
 274 rows, one per (country, year) combination spanning 1970–2020.
 Features: Year (int), Country (6 categories), Spending_USD (float).
 Target:   Life_Expectancy (float, years).
@@ -29,7 +30,7 @@ print(df.head())
 print(df[["Spending_USD", "Life_Expectancy"]].describe().round(2))
 print("Countries:", sorted(df["Country"].unique()))
 
-# %% Train / test split  (80 / 20)  — single feature first
+# %% [3] Train / test split  (80 / 20)  — single feature first
 X = df[["Spending_USD"]].values   # shape (n, 1)
 y = df["Life_Expectancy"].values  # shape (n,)
 
@@ -37,7 +38,7 @@ X_train, X_test, y_train, y_test = train_test_split(
     X, y, test_size=0.2, random_state=42
 )
 
-# %% Standardise — fit statistics on train only, apply to both splits
+# %% [4] Standardise — fit statistics on train only, apply to both splits
 mu: float    = float(X_train.mean())
 sigma: float = float(X_train.std())
 
@@ -53,19 +54,19 @@ def add_bias(X: np.ndarray) -> np.ndarray:
 X_train_b = add_bias(X_train_s)   # shape (n_train, 2)
 X_test_b  = add_bias(X_test_s)    # shape (n_test,  2)
 
-# %% Loss function: Mean Squared Error
+# %% [5] Loss function: Mean Squared Error
 def mse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """MSE = (1/n) Σ(y - ŷ)²  — average squared prediction error."""
     return float(np.mean((y_true - y_pred) ** 2))
 
 
-# %% Analytical solution — Normal equation: θ = (XᵀX)⁻¹ Xᵀy
+# %% [6] Analytical solution — Normal equation: θ = (XᵀX)⁻¹ Xᵀy
 theta = np.linalg.lstsq(X_train_b, y_train, rcond=None)[0]
 
 print(f"\nOLS  intercept={theta[0]:.4f}  slope={theta[1]:.4f}")
 print(f"Train MSE = {mse(y_train, X_train_b @ theta):.4f}")
 
-# %% Metrics by hand: RMSE and R²
+# %% [7] Metrics by hand: RMSE and R²
 def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
     """Root MSE — same unit as the target (years of life expectancy)."""
     return float(np.sqrt(mse(y_true, y_pred)))
@@ -83,7 +84,7 @@ print(f"\n--- Single feature (Spending_USD) ---")
 print(f"Test  RMSE = {rmse(y_test, y_pred_test):.3f} years")
 print(f"Test  R²   = {r2(y_test, y_pred_test):.3f}")
 
-# %% Plot regression line on original (unstandardised) scale
+# %% [8] Plot regression line on original (unstandardised) scale
 x_orig = np.linspace(X_test.min(), X_test.max(), 200).reshape(-1, 1)
 x_orig_b = add_bias((x_orig - mu) / sigma)
 
@@ -100,8 +101,8 @@ plt.show()
 
 # ── ALL FEATURES ──────────────────────────────────────────────────────────────
 
-# %% Prepare features: one-hot encode Country, keep Year + Spending_USD
-"""
+# %%
+""" [9] Prepare features: one-hot encode Country, keep Year + Spending_USD
 Adding Year captures the global upward trend in life expectancy independent of
 spending. Country dummies absorb between-country baseline differences.
 drop_first=True avoids the dummy trap (perfect multicollinearity).
@@ -121,7 +122,7 @@ X_all_train, X_all_test, y_all_train, y_all_test = train_test_split(
     X_all.values, y_all, test_size=0.2, random_state=42
 )
 
-# %% Standardise only the numeric columns on train; dummies stay 0/1
+# %% [10] Standardise only the numeric columns on train; dummies stay 0/1
 col_list = list(X_all.columns)
 num_idx  = [col_list.index(c) for c in NUMERIC]
 
@@ -133,7 +134,7 @@ X_all_test_s  = X_all_test.copy()
 X_all_train_s[:, num_idx] = (X_all_train[:, num_idx] - mu_all) / sigma_all
 X_all_test_s[:, num_idx]  = (X_all_test[:, num_idx]  - mu_all) / sigma_all
 
-# %% Fit & compare R²
+# %% [11] Fit & compare R²
 model = LinearRegression()
 model.fit(X_all_train_s, y_all_train)
 
@@ -145,8 +146,8 @@ print(f"R² train = {r2_train:.3f}")
 print(f"R² test  = {r2_test:.3f}")
 print(f"(single-feature test R² was {r2(y_test, y_pred_test):.3f})")
 
-# %% Permutation importance
-"""
+# %%
+""" [12] Permutation importance
 For each feature: shuffle its values in the test set and measure how much R²
 drops. Larger drop → the model relied on that feature more.
 No refitting needed — purely a test-time diagnostic.
@@ -165,7 +166,7 @@ print("\nPermutation importance (mean R² drop):")
 for feat, imp in sorted(importances.items(), key=lambda x: -x[1]):
     print(f"  {feat:<25} {imp:+.4f}")
 
-# %% Plot feature importance
+# %% [13] Plot feature importance
 order  = sorted(importances, key=importances.get)   # ascending → bottom = least
 values = [importances[f] for f in order]
 
@@ -178,8 +179,8 @@ fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_healthexp_importance.png")
 plt.show()
 
-# %% Residuals vs fitted values
-"""
+# %%
+""" [14] Residuals vs fitted values
 Homoscedasticity check: if the linear model's assumptions hold, residuals
 should scatter evenly around zero across all fitted values (no funnel shape).
 """
@@ -196,8 +197,8 @@ fig.tight_layout()
 fig.savefig(PLOT_DIR / "linreg_healthexp_residuals.png")
 plt.show()
 
-# %% Standardised coefficients
-"""
+# %%
+""" [15] Standardised coefficients
 β_std_j = β_j × (σ_xj / σ_y)
 Converts each coefficient to units of std(y) per std(x_j), making magnitudes
 directly comparable across features with different scales.
