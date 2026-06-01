@@ -68,10 +68,6 @@ The dataset captures bills recorded by a single waiter over several months at on
 - `tips_03_all_features.py`: multiple regression, one-hot encoding, permutation importance, partial regression, heteroscedasticity
 - `tips_04_kmeans_segmentation.py`: k-means clustering, StandardScaler, elbow plot, silhouette score, segment profiling, demographic crosstab
 
-- `tips_01_eda.py`: tip_pct distribution, categorical comparison, confounding, smoker-sex interaction
-- `tips_02_single_feature.py`: linear regression, gradient descent, OLS normal equation, MSE, R2
-- `tips_03_all_features.py`: multiple regression, one-hot encoding, permutation importance, partial regression, heteroscedasticity
-
 **General intent of scripts:** regression (adding features sequentially), unsupervised clustering
 
 See [QUESTIONS.md](QUESTIONS.md) for per-script code-reading questions.

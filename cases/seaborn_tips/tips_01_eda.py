@@ -113,6 +113,7 @@ print(f"Saved: {PLOT_DIR / 'tips_tip_pct_by_category.png'}")
 print(tips.groupby("sex")["tip_pct"].describe().round(2))
 print(tips.groupby("smoker")["tip_pct"].describe().round(2))
 print(tips.groupby("day")["tip_pct"].describe().round(2))
+print(tips.groupby("time")["tip_pct"].describe().round(2))
 
 # %%
 """ [5] Bill size by day and time

@@ -27,8 +27,8 @@
 
 **Q4** · `eda.confounding`
 
-- Cell [5] plots `total_bill` by day and by time. Which days appear to have higher `tip_pct` (visible in Q2 output)? Could bill size explain this day effect?
-- How would you test whether day's apparent effect on `tip_pct` survives after controlling for `total_bill`?
+- Cell [5] plots `total_bill` by day and by time. Which days appear to have higher `tip_pct` (visible in Q2 output)?
+- Could bill size explain this day effect?
 
 **Q5** · `eda.confounding`
 

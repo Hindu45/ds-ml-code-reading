@@ -8,6 +8,8 @@ Therefore, understanding code pattern, concepts, and the general data-science pr
 
 To train this skill, this repo provides ready-made data-science scripts along with code reading questions.
 
+> **Important note:** This repo is read-only. You'll never push changes back. Scripts are meant to be read and run as-is.
+
 ## Contents
 
 - [Repo Setup](#repo-setup)
@@ -16,9 +18,15 @@ To train this skill, this repo provides ready-made data-science scripts along wi
 
 ## Repo Setup
 
-Run `setup-venv.bat` to create the virtual environment and install all dependencies in one step. It creates `.venv/`, writes the path file for imports, and runs `install-missing-packages.py`. This script checks the base Python installation for existing site-packages and installs only what is missing from `requirements.txt`. This is storage efficient in lab sessions where the Python base distribution already has many data-science packages.
+This course is working with VS Code as the primary IDE.
 
-> This repo is read-only. You'll never push changes back. Scripts are meant to be read and run as-is.
+**Install VS Code Extensions:** In VS Code, make sure you have the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) and [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) extensions installed.
+
+**Setup Python environment:**
+- **Default (lab) setup:** On Windows, run `setup-venv.bat` to create a virtual environment and install all dependencies in one step (double-click from file explorer or run `.\setup-venv.bat` from terminal). What the script does:
+    - The script creates `.venv/`, writes the path file for imports, and runs `install-missing-packages.py`.
+    - Then, the script checks the base Python installation for existing site-packages and installs only what is missing from `requirements.txt`. This is storage efficient in lab sessions where the Python base distribution already has many data-science packages.
+- **Private laptops:** If you work on a private laptop, you may need to accomodate for you specific machine, particularly make sure you have an appropriate base Python installation. I f you use `setup-venv.bat`, you may not to switch the Python path inside.
 
 ---
 
@@ -28,8 +36,8 @@ Run `setup-venv.bat` to create the virtual environment and install all dependenc
 
 Most Python scripts in this repo use interactive cells, marked by `#%%`.
 
-- Open the script in VS Code with the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) and [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) extensions.
-- Each `#%%` block runs as a Jupyter cell. Best for step-by-step exploration with intermediate output.
+- Open the script in VS Code: start with `cases/seaborn_tips/tips_01_eda.py` script.
+- Run `#%%` blocks individually as an interactive cell. You can alway do that from within a cell: (keyboard shortcut: `Ctrl+Enter`). By running individual cells, you can explore intermediate output step-by-step.
 
 See also [interactive mode guide](docs/interactive-mode-guide.md) for detailed setup and troubleshooting.
 
