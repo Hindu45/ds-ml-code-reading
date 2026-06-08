@@ -1,7 +1,5 @@
 # Code Reading Questions for seaborn_mpg
 
-TBD: Review
-
 - [mpg_01_eda.py](#questions-mpg_01_edapy)
 - [mpg_02_ridge_lasso.py](#questions-mpg_02_ridge_lassopy)
 - [mpg_03_bias_variance_decisiontree.py](#questions-mpg_03_bias_variance_decisiontreepy)
@@ -157,23 +155,17 @@ TBD: Review
 
 **Script topics** · Underfitting and Overfitting · Regularized Regression
 
-**Q1** · `training.convergence`
+**Q1** · `process.controlled-change`
 
-- Cell [3] uses `RIDGE_ALPHA_HIGH=1000` for the high-bias panel and `RIDGE_ALPHA_LOW=0.01` for the low-regularisation panel. What role does alpha play that is analogous to `max_depth` in the decision-tree script?
-- The cell [3] docstring notes that with n/p ~65 the low-reg panel shows "the well-specified but limited baseline rather than classic high-variance." What does that mean, and how does it differ from the fully grown tree panel in the other script?
+- Compare this script's structure with `mpg_03_bias_variance_decisiontree.py` (cells [2]-[5] and the config block in cell [1]). What is the single design choice that differs between them?
+- What does this structural similarity reveal about the purpose of both scripts, and how does it connect to the research question stated in the top docstring?
 
 **Q2** · `training.convergence`
 
-- Cell [4] sweeps alpha on a log scale. The docstring says "the U-shape is mirrored." Explain why the validation RMSE degrades on the right (large alpha) rather than the left (small alpha).
-- The output shows best CV RMSE = 3.859 at alpha = 0.01, the smallest value in the sweep. What does landing at the left boundary suggest about how much regularisation this dataset needs, and what would you do to confirm this?
+- Cell [4]'s docstring says the validation curve's U-shape is "mirrored" compared to `mpg_03`. Explain why increasing alpha causes CV RMSE to degrade on the right side of the plot, whereas in the decision-tree script it was larger max_depth that degraded CV on the right.
+- The output shows best alpha=0.0100, the smallest alpha in the sweep, while `mpg_03` found best max_depth=8, an interior point. What does each boundary result tell you about how sensitive this dataset is to each complexity dial?
 
-**Q3** · `process.controlled-change`
+**Q3** · `evaluation.overfit`
 
-- Comparing this script with `mpg_03_bias_variance_decisiontree.py`: the overall structure (cells [2]-[5]) is nearly identical. What is the single design choice that differs?
-- What does this structural similarity reveal about the purpose of both scripts?
-
-**Q4** · `evaluation.overfit`
-
-- The CV stability output (cell [5]) for this Ridge script (alpha = 0.01) is numerically identical to `mpg_03`'s stability output: single-split std = 0.296, CV std = 0.024, over the same 30 seeds.
-- Does this mean Ridge and LinearRegression perform identically, or is there a simpler explanation?
-- What would you change in the experiment to determine whether stability is driven by dataset size or model choice?
+- Cell [5] prints single-split std=0.296 and CV std=0.024, numerically identical to the output from `mpg_03`. Does this mean Ridge and LinearRegression perform identically on this dataset, or is there a simpler explanation?
+- What would you need to change in the experiment to determine whether these stability numbers are driven by dataset size or model choice?

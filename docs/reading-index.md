@@ -9,14 +9,21 @@ A few principles that guide the reading progression:
 
 Question types reference the [Question Catalogue](question-catalogue.md).
 
-**Contents**
-- [Tips: Restaurant Tipping Behavior](#tips-restaurant-tipping-behavior)
-- [Topic Reference](#topic-reference)
+## Contents
+Suggested dataset sequence:
+1. [Tips: Restaurant Tipping Behavior](#tips-restaurant-tipping-behavior)
+2. [Penguins: Palmer Penguins Morphology](#penguins-palmer-penguins-morphology)
+3. [MPG: Automobile Fuel Efficiency](#mpg-automobile-fuel-efficiency)
+
+The questions for datasets not listed here are not yet finalized.
+
+Additionally: [Topic Reference](#topic-reference)
 
 ---
 
+## Suggested Dataset Sequence
 
-## Tips: Restaurant Tipping Behavior
+### Tips: Restaurant Tipping Behavior
 
 *A single waiter's 244 bills:  compact, interpretable, and rich enough to carry us from EDA through regression to clustering.*
 
@@ -29,63 +36,88 @@ Questions for this dataset are in [cases/seaborn_tips/QUESTIONS.md](../cases/sea
 
 ---
 
+### Penguins: Palmer Penguins Morphology
+
+*Morphological measurements for 344 penguins across three species: a modern, richer alternative to the Iris dataset that carries classification from a simple baseline through trees, with real confounds along the way.*
+
+Questions for this dataset are in [cases/seaborn_penguins/QUESTIONS.md](../cases/seaborn_penguins/QUESTIONS.md).
+
+- [penguins_01_eda.py](../cases/seaborn_penguins/penguins_01_eda.py): distributions, correlation, Simpson's paradox, species-island confounding
+- [penguins_02_modeling_baseline.py](../cases/seaborn_penguins/penguins_02_modeling_baseline.py): logistic regression, incremental features, macro F1, confusion matrix
+- [penguins_03_modeling_trees.py](../cases/seaborn_penguins/penguins_03_modeling_trees.py): decision tree, depth sweep, tree visualisation, feature importance, random forest
+
+---
+
+### MPG: Automobile Fuel Efficiency
+
+*392 cars from 1970–1982: multicollinear engine specs and a strong time trend make this a natural case for regularisation, and the moderate dataset size keeps bias-variance diagnostics clean and readable.*
+
+Questions for this dataset are in [cases/seaborn_mpg/QUESTIONS.md](../cases/seaborn_mpg/QUESTIONS.md).
+
+- [mpg_01_eda.py](../cases/seaborn_mpg/mpg_01_eda.py): numeric distributions, multicollinearity, time trend, suppressor effect, horsepower outliers
+- [mpg_02_ridge_lasso.py](../cases/seaborn_mpg/mpg_02_ridge_lasso.py): Ridge and Lasso, three-way split, coefficient paths, alpha selection, leakage-safe scaling
+- [mpg_03_bias_variance_decisiontree.py](../cases/seaborn_mpg/mpg_03_bias_variance_decisiontree.py): learning curves, validation curve, depth as complexity dial, CV vs single-split stability
+- [mpg_04_bias_variance_ridge.py](../cases/seaborn_mpg/mpg_04_bias_variance_ridge.py): learning curves, validation curve, alpha as inverse complexity dial, comparison with decision tree
+
+---
+
 ## Topic Reference
 
 Quick lookup by course topics.
 
-### Block A:  EDA
+### Exploratory Data Analysis (EDA)
 *Course alignment: Part III · Data Understanding*
 
 - [tips_01_eda.py](../cases/seaborn_tips/tips_01_eda.py): engineered target, categorical breakdown
 - [mpg_01_eda.py](../cases/seaborn_mpg/mpg_01_eda.py): numeric distributions, suppressor effect
 - [penguins_01_eda.py](../cases/seaborn_penguins/penguins_01_eda.py): cluster structure, species confound
 
-### Block B:  Data Preparation
+### Data Preparation
 *Course alignment: Part IV · Data Preparation*
 
 - [tips_02_single_feature.py](../cases/seaborn_tips/tips_02_single_feature.py): leakage-safe scaling
 - [penguins_02_modeling_baseline.py](../cases/seaborn_penguins/penguins_02_modeling_baseline.py): missing value choices
 
-### Block C:  Linear Regression + Gradient Descent
+### Linear Regression + Gradient Descent
 *Course alignment: Part V · Linear Regression, Gradient Descent*
 
 - [tips_02_single_feature.py](../cases/seaborn_tips/tips_02_single_feature.py): GD from scratch
 - [healthexp_01_linreg.py](../cases/seaborn_healthexp/healthexp_01_linreg.py): OLS with fixed effects
 
-### Block D:  Overfitting and Bias-Variance
+### Overfitting and Bias-Variance
 *Course alignment: Part V · Underfitting and Overfitting*
 
-- [bias_variance_tradeoff_decisiontree.py](../cases/seaborn_mpg/bias_variance_tradeoff_decisiontree.py): depth as complexity dial
-- [bias_variance_tradeoff_ridge.py](../cases/seaborn_mpg/bias_variance_tradeoff_ridge.py): alpha as complexity dial
+- [mpg_03_bias_variance_decisiontree.py](../cases/seaborn_mpg/mpg_03_bias_variance_decisiontree.py): depth as complexity dial
+- [mpg_04_bias_variance_ridge.py](../cases/seaborn_mpg/mpg_04_bias_variance_ridge.py): alpha as inverse complexity dial
 - [penguins_03_modeling_trees.py](../cases/seaborn_penguins/penguins_03_modeling_trees.py): visible train/test gap
 
-### Block E:  Regularized Regression
+### Regularized Regression
 *Course alignment: Part V · Regularized Regression*
 
 - [tips_03_all_features.py](../cases/seaborn_tips/tips_03_all_features.py): encoding + OLS baseline
-- [mpg_02_ridge_lasso_utils.py](../cases/seaborn_mpg/mpg_02_ridge_lasso_utils.py): high-multicollinearity case
+- [mpg_02_ridge_lasso.py](../cases/seaborn_mpg/mpg_02_ridge_lasso.py): high-multicollinearity case
 - [diamonds_02_ridge_lasso.py](../cases/seaborn_diamonds/diamonds_02_ridge_lasso.py): large-scale comparison
 
-### Block F:  Classification, Decision Trees, Random Forests
+### Classification, Decision Trees, Random Forests
 *Course alignment: Part V · Classification Tasks, Decision Trees, Random Forests*
 
 - [penguins_02_modeling_baseline.py](../cases/seaborn_penguins/penguins_02_modeling_baseline.py): logistic baseline
 - [penguins_03_modeling_trees.py](../cases/seaborn_penguins/penguins_03_modeling_trees.py): depth sweep
 - TBD: multi-model comparison
 
-### Block G:  Principles: Generalisation, Baselines, Metrics
+### Principles: Generalization, Baselines, Metrics
 *Course alignment: Part VI · Principles That Transfer*
 
 - [penguins_02_modeling_baseline.py](../cases/seaborn_penguins/penguins_02_modeling_baseline.py): baseline + bug hunt
 
-### Block H:  Anomaly Detection / Unsupervised Learning
+### Anomaly Detection / Unsupervised Learning
 *Course alignment: Part VII · Framing Unsupervised Learning, Isolation Forests*
 
 - [planets_01_eda.py](../cases/seaborn_planets/planets_01_eda.py): MNAR, extreme skew
 - [planets_02_isolation_forest.py](../cases/seaborn_planets/planets_02_isolation_forest.py): anomaly scoring
 - [sklearn_kddcup99/02_isolation_forest.py](../cases/sklearn_kddcup99/02_isolation_forest.py): imbalanced real-world case
 
-### Block I:  Deployment and Production
+### Deployment and Production
 *Course alignment: Part IX · Closing the Loop*
 
 - [penguins_02_modeling_baseline.py](../cases/seaborn_penguins/penguins_02_modeling_baseline.py): research-to-field gap

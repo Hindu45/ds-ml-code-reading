@@ -73,6 +73,7 @@ configs_lc = [
 ]
 
 fig, axes = plt.subplots(1, 2, figsize=(11, 5), sharey=True)
+results_lc = []
 
 for ax, (pipe, label) in zip(axes, configs_lc):
     sizes, tr_scores, cv_scores = learning_curve(
@@ -97,25 +98,16 @@ for ax, (pipe, label) in zip(axes, configs_lc):
     ax.legend(fontsize=10)
     ax.grid(True, alpha=0.3)
 
-    title_plain = label.replace("\n", " ")
-    lc_df = pd.DataFrame({
-        "n_train":    sizes.astype(int),
-        "train_mean": tr_mean,
-        "train_std":  tr_std,
-        "cv_mean":    cv_mean,
-        "cv_std":     cv_std,
-        "gap":        cv_mean - tr_mean,
-    })
-    print(f"\n── Learning curve: {title_plain} ──")
-    print(f"   {cv_folds}-fold CV at {len(sizes)} training sizes "
-          f"({int(sizes[0])}–{int(sizes[-1])} of {X.shape[0]} samples).")
-    print(lc_df.to_string(index=False, float_format="{:.3f}".format))
+    results_lc.append((label.replace("\n", " "), tr_mean[-1], cv_mean[-1], int(sizes[-1])))
 
 axes[0].set_ylabel("RMSE")
 fig.suptitle(f"Learning curves (Ridge) — {DATASET_SLUG} → {TARGET}", fontsize=13)
 fig.tight_layout()
 fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_ridge_learning_curves.png")
 plt.show()
+for lbl, tr_f, cv_f, n_f in results_lc:
+    print(f"  {lbl}: train={tr_f:.3f}  CV={cv_f:.3f}  gap={cv_f - tr_f:.3f}  (n={n_f})")
+print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_ridge_learning_curves.png'}")
 
 
 # %%
@@ -148,16 +140,6 @@ cv_std_vc  =  cv_vc.std(axis=1)
 best_alpha = RIDGE_ALPHA_RANGE[cv_mean_vc.argmin()]
 best_cv    = cv_mean_vc.min()
 
-vc_df = pd.DataFrame({
-    "alpha":      RIDGE_ALPHA_RANGE,
-    "train_mean": tr_mean_vc,
-    "cv_mean":    cv_mean_vc,
-    "gap":        cv_mean_vc - tr_mean_vc,
-})
-print(f"\n── Validation curve (α sweep) ──")
-print(f"   Best CV RMSE = {best_cv:.3f} at α = {best_alpha:.4f}")
-print(vc_df.to_string(index=False, float_format="{:.3f}".format))
-
 fig, ax = plt.subplots(figsize=(8, 5))
 ax.semilogx(RIDGE_ALPHA_RANGE, tr_mean_vc, "o-",  color="C0", label="Train RMSE")
 ax.fill_between(RIDGE_ALPHA_RANGE, tr_mean_vc - tr_std_vc, tr_mean_vc + tr_std_vc,
@@ -175,6 +157,8 @@ ax.grid(True, alpha=0.3)
 fig.tight_layout()
 fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_ridge_validation_curve.png")
 plt.show()
+print(f"Best α={best_alpha:.4f}  CV RMSE={best_cv:.3f}  (sweep: {RIDGE_ALPHA_RANGE[0]:.2f}–{RIDGE_ALPHA_RANGE[-1]:.0f})")
+print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_ridge_validation_curve.png'}")
 
 
 # %%
@@ -205,14 +189,6 @@ for seed in range(N_SEEDS):
 
 single_s = pd.Series(single_scores,       name="Single 80/20")
 cv_s     = pd.Series(cv_scores_stability, name=f"{cv_folds}-fold CV (mean)")
-stability_df = pd.concat([single_s.describe(), cv_s.describe()], axis=1).round(3)
-print(f"\n── CV stability — {N_SEEDS} random seeds  (α={best_alpha:.4f}) ──")
-print(f"   Single 80/20: train_test_split(test_size=0.2) per seed "
-      f"→ 1 RMSE on ~{X.shape[0] - int(X.shape[0]*0.8)} samples.")
-print(f"   {cv_folds}-fold CV: KFold(shuffle=True) per seed "
-      f"→ mean RMSE over {cv_folds} folds of ~{X.shape[0]//cv_folds} samples each.")
-print(f"   Box = IQR; whiskers = 1.5×IQR.")
-print(stability_df.to_string())
 
 fig, ax = plt.subplots(figsize=(6, 5))
 bp = ax.boxplot(
@@ -234,3 +210,6 @@ ax.set_title(
 fig.tight_layout()
 fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_ridge_cv_stability.png")
 plt.show()
+print(f"Single 80/20: mean={single_s.mean():.3f}  std={single_s.std():.3f}")
+print(f"{cv_folds}-fold CV:  mean={cv_s.mean():.3f}  std={cv_s.std():.3f}  ({N_SEEDS} seeds)")
+print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_ridge_cv_stability.png'}")

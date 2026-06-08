@@ -39,10 +39,8 @@ plots/
 
 # local
 _local/
-_tmp/
-_dataset-analyses/
 _discussion.md
 _output.md
-
+SOLUTIONS.md
 .claude/
 CLAUDE.md

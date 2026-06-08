@@ -23,11 +23,11 @@
 **Q3** · `eda.plot-assumption`
 
 - Cells [4] and [5] use box plots with overlaid strip plots. Why could strip plots be useful here? What do the strips reveal that the box plot alone cannot show?
-- As a side: Would you improve the visual layout of the two plots?
+- As a side: Is there anything you would improve in the visual appearance of the two plots?
 
 **Q4** · `eda.confounding`
 
-- Cell [5] plots `total_bill` by day and by time. Which days appear to have higher `tip_pct` (visible in Q2 output)?
+- Cell [5] plots `total_bill` by day and by time. Which days appear to have higher `tip_pct` (visible in Cell [4] output)?
 - Could bill size explain this day effect?
 
 **Q5** · `eda.confounding`
@@ -64,7 +64,7 @@
 **Q4** · `modeling.algorithm`
 
 - Cell [7] implements an optimizer from scratch. What is it called (_yes, a simple one_)?
-- What quantity does `grad` (line 79) represent mathematically?
+- What quantity does `grad`represent mathematically?
 - Where exactly in the loop is that quantity computed?
 
 **Q5** · `training.train-dynamics`
@@ -124,8 +124,8 @@
 
 **Q8** · `business.objective-alignment`
 
-- Is predicting `total_bill` the right question? Or might there be a more interesting target variable?
-- Hint: Notice the commented out feature-engineering line in cell [2]. Also found in tips EDA script.
+- Is predicting `tip` the right question? Or might there be a more interesting target variable?
+- Hint: Notice the commented out feature-engineering line in cell [2].
 - If you swap out the target variable, what to you expect to change about results?  
 
 ---
