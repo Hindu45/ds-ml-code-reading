@@ -4,7 +4,6 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 from pathlib import Path
 from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
@@ -13,6 +12,10 @@ from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import (
     learning_curve, validation_curve,
     cross_val_score, train_test_split, KFold,
+)
+
+from cases.utils.model_eval_plots import (
+    plot_learning_curve_panels, plot_validation_curve, plot_cv_stability,
 )
 
 PLOT_DIR = Path(__file__).parent / "plots"
@@ -72,10 +75,8 @@ configs_lc = [
     (ridge_pipe(RIDGE_ALPHA_LOW),  f"Low regularisation  (α={RIDGE_ALPHA_LOW})"),
 ]
 
-fig, axes = plt.subplots(1, 2, figsize=(11, 5), sharey=True)
-results_lc = []
-
-for ax, (pipe, label) in zip(axes, configs_lc):
+panels_lc = []
+for pipe, label in configs_lc:
     sizes, tr_scores, cv_scores = learning_curve(
         pipe, X, y,
         train_sizes=np.linspace(0.10, 0.80, 8),
@@ -83,28 +84,14 @@ for ax, (pipe, label) in zip(axes, configs_lc):
         scoring="neg_root_mean_squared_error",
         n_jobs=-1,
     )
-    tr_mean = -tr_scores.mean(axis=1)
-    tr_std  =  tr_scores.std(axis=1)
-    cv_mean = -cv_scores.mean(axis=1)
-    cv_std  =  cv_scores.std(axis=1)
+    panels_lc.append((sizes, -tr_scores.mean(axis=1), tr_scores.std(axis=1),
+                      -cv_scores.mean(axis=1), cv_scores.std(axis=1), label))
 
-    ax.plot(sizes, tr_mean, "o-",  color="C0", label="Train RMSE")
-    ax.fill_between(sizes, tr_mean - tr_std, tr_mean + tr_std, alpha=0.15, color="C0")
-    ax.plot(sizes, cv_mean, "s--", color="C1", label="CV RMSE")
-    ax.fill_between(sizes, cv_mean - cv_std, cv_mean + cv_std, alpha=0.10, color="C1")
-
-    ax.set_xlabel("Training set size")
-    ax.set_title(label, fontsize=11)
-    ax.legend(fontsize=10)
-    ax.grid(True, alpha=0.3)
-
-    results_lc.append((label.replace("\n", " "), tr_mean[-1], cv_mean[-1], int(sizes[-1])))
-
-axes[0].set_ylabel("RMSE")
-fig.suptitle(f"Learning curves (Ridge) — {DATASET_SLUG} → {TARGET}", fontsize=13)
-fig.tight_layout()
-fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_ridge_learning_curves.png")
-plt.show()
+results_lc = plot_learning_curve_panels(
+    panels_lc,
+    suptitle=f"Learning curves (Ridge) — {DATASET_SLUG} → {TARGET}",
+    save_path=PLOT_DIR / f"{DATASET_SLUG}_ridge_learning_curves.png",
+)
 for lbl, tr_f, cv_f, n_f in results_lc:
     print(f"  {lbl}: train={tr_f:.3f}  CV={cv_f:.3f}  gap={cv_f - tr_f:.3f}  (n={n_f})")
 print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_ridge_learning_curves.png'}")
@@ -119,9 +106,6 @@ from 0.01 to 10 000.  α is the regularisation dial — the inverse of complexit
   • Right (large α): heavy shrinkage, coefficients → 0 → high bias.
   • Sweet spot       : the α where CV RMSE is minimised.
 
-Unlike the max_depth dial (Fig 2 of mpg_03_bias_variance_decisiontree.py), more α means LESS
-complexity, so the U-shape is mirrored: CV degrades on the right (overregularised)
-instead of the left.
 """
 train_vc, cv_vc = validation_curve(
     Pipeline([("scaler", StandardScaler()), ("model", Ridge())]),
@@ -140,23 +124,16 @@ cv_std_vc  =  cv_vc.std(axis=1)
 best_alpha = RIDGE_ALPHA_RANGE[cv_mean_vc.argmin()]
 best_cv    = cv_mean_vc.min()
 
-fig, ax = plt.subplots(figsize=(8, 5))
-ax.semilogx(RIDGE_ALPHA_RANGE, tr_mean_vc, "o-",  color="C0", label="Train RMSE")
-ax.fill_between(RIDGE_ALPHA_RANGE, tr_mean_vc - tr_std_vc, tr_mean_vc + tr_std_vc,
-                alpha=0.15, color="C0")
-ax.semilogx(RIDGE_ALPHA_RANGE, cv_mean_vc, "s--", color="C1", label="CV RMSE")
-ax.fill_between(RIDGE_ALPHA_RANGE, cv_mean_vc - cv_std_vc, cv_mean_vc + cv_std_vc,
-                alpha=0.10, color="C1")
-ax.axvline(best_alpha, color="gray", linestyle=":", linewidth=1.5,
-           label=f"Best α = {best_alpha:.3f}")
-ax.set_xlabel("α  (← less regularisation   |   more regularisation →)")
-ax.set_ylabel("RMSE")
-ax.set_title(f"Validation curve — Ridge on {DATASET_SLUG} → {TARGET}", fontsize=12)
-ax.legend()
-ax.grid(True, alpha=0.3)
-fig.tight_layout()
-fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_ridge_validation_curve.png")
-plt.show()
+plot_validation_curve(
+    RIDGE_ALPHA_RANGE, tr_mean_vc, tr_std_vc, cv_mean_vc, cv_std_vc,
+    best_param=best_alpha,
+    best_label=f"Best α = {best_alpha:.3f}",
+    xlabel="α  (← less regularisation   |   more regularisation →)",
+    ylabel="RMSE",
+    title=f"Validation curve — Ridge on {DATASET_SLUG} → {TARGET}",
+    save_path=PLOT_DIR / f"{DATASET_SLUG}_ridge_validation_curve.png",
+    logx=True,
+)
 print(f"Best α={best_alpha:.4f}  CV RMSE={best_cv:.3f}  (sweep: {RIDGE_ALPHA_RANGE[0]:.2f}–{RIDGE_ALPHA_RANGE[-1]:.0f})")
 print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_ridge_validation_curve.png'}")
 
@@ -190,26 +167,12 @@ for seed in range(N_SEEDS):
 single_s = pd.Series(single_scores,       name="Single 80/20")
 cv_s     = pd.Series(cv_scores_stability, name=f"{cv_folds}-fold CV (mean)")
 
-fig, ax = plt.subplots(figsize=(6, 5))
-bp = ax.boxplot(
-    [single_scores, cv_scores_stability],
-    tick_labels=["Single 80/20 split", f"{cv_folds}-fold CV (mean)"],
-    patch_artist=True,
-    widths=0.4,
+plot_cv_stability(
+    single_scores, cv_scores_stability, cv_folds,
+    ylabel=f"RMSE  (Ridge α={best_alpha:.4f})",
+    title=f"Evaluation stability — {N_SEEDS} random seeds\n{DATASET_SLUG} → {TARGET}",
+    save_path=PLOT_DIR / f"{DATASET_SLUG}_ridge_cv_stability.png",
 )
-bp["boxes"][0].set_facecolor("tab:orange")
-bp["boxes"][1].set_facecolor("tab:blue")
-for patch in bp["boxes"]:
-    patch.set_alpha(0.6)
-
-ax.set_ylabel(f"RMSE  (Ridge α={best_alpha:.4f})")
-ax.set_title(
-    f"Evaluation stability — {N_SEEDS} random seeds\n"
-    f"{DATASET_SLUG} → {TARGET}"
-)
-fig.tight_layout()
-fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_ridge_cv_stability.png")
-plt.show()
 print(f"Single 80/20: mean={single_s.mean():.3f}  std={single_s.std():.3f}")
 print(f"{cv_folds}-fold CV:  mean={cv_s.mean():.3f}  std={cv_s.std():.3f}  ({N_SEEDS} seeds)")
 print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_ridge_cv_stability.png'}")

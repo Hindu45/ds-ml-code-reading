@@ -4,17 +4,17 @@
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
 from pathlib import Path
-from sklearn.linear_model import LinearRegression
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import (
     learning_curve, validation_curve,
     cross_val_score, train_test_split, KFold,
 )
 from sklearn.tree import DecisionTreeRegressor
+
+from cases.utils.model_eval_plots import (
+    plot_learning_curve_panels, plot_validation_curve, plot_cv_stability,
+)
 
 PLOT_DIR = Path(__file__).parent / "plots"
 PLOT_DIR.mkdir(exist_ok=True)
@@ -69,10 +69,8 @@ configs_lc = [
     (tree_deep,    "High variance\n(fully grown tree)"),
 ]
 
-fig, axes = plt.subplots(1, 2, figsize=(11, 5), sharey=True)
-results_lc = []
-
-for ax, (model, label) in zip(axes, configs_lc):
+panels_lc = []
+for model, label in configs_lc:
     sizes, tr_scores, cv_scores = learning_curve(
         model, X, y,
         train_sizes=np.linspace(0.10, 0.80, 8),
@@ -80,28 +78,14 @@ for ax, (model, label) in zip(axes, configs_lc):
         scoring="neg_root_mean_squared_error",
         n_jobs=-1,
     )
-    tr_mean = -tr_scores.mean(axis=1)
-    tr_std  =  tr_scores.std(axis=1)
-    cv_mean = -cv_scores.mean(axis=1)
-    cv_std  =  cv_scores.std(axis=1)
+    panels_lc.append((sizes, -tr_scores.mean(axis=1), tr_scores.std(axis=1),
+                      -cv_scores.mean(axis=1), cv_scores.std(axis=1), label))
 
-    ax.plot(sizes, tr_mean, "o-",  color="C0", label="Train RMSE")
-    ax.fill_between(sizes, tr_mean - tr_std, tr_mean + tr_std, alpha=0.15, color="C0")
-    ax.plot(sizes, cv_mean, "s--", color="C1", label="CV RMSE")
-    ax.fill_between(sizes, cv_mean - cv_std, cv_mean + cv_std, alpha=0.10, color="C1")
-
-    ax.set_xlabel("Training set size")
-    ax.set_title(label, fontsize=11)
-    ax.legend(fontsize=10)
-    ax.grid(True, alpha=0.3)
-
-    results_lc.append((label.replace("\n", " "), tr_mean[-1], cv_mean[-1], int(sizes[-1])))
-
-axes[0].set_ylabel("RMSE")
-fig.suptitle(f"Learning curves: {DATASET_SLUG} dataset, predicting {TARGET}", fontsize=13)
-fig.tight_layout()
-fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_learning_curves.png")
-plt.show()
+results_lc = plot_learning_curve_panels(
+    panels_lc,
+    suptitle=f"Learning curves: {DATASET_SLUG} dataset, predicting {TARGET}",
+    save_path=PLOT_DIR / f"{DATASET_SLUG}_learning_curves.png",
+)
 for lbl, tr_f, cv_f, n_f in results_lc:
     print(f"  {lbl}: train={tr_f:.3f}  CV={cv_f:.3f}  gap={cv_f - tr_f:.3f}  (n={n_f})")
 print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_learning_curves.png'}")
@@ -137,23 +121,15 @@ cv_std_vc  =  cv_vc.std(axis=1)
 best_depth = int(DEPTH_RANGE[cv_mean_vc.argmin()])
 best_cv    = cv_mean_vc.min()
 
-fig, ax = plt.subplots(figsize=(8, 5))
-ax.plot(DEPTH_RANGE, tr_mean_vc, "o-",  color="C0", label="Train RMSE")
-ax.fill_between(DEPTH_RANGE, tr_mean_vc - tr_std_vc, tr_mean_vc + tr_std_vc,
-                alpha=0.15, color="C0")
-ax.plot(DEPTH_RANGE, cv_mean_vc, "s--", color="C1", label="CV RMSE")
-ax.fill_between(DEPTH_RANGE, cv_mean_vc - cv_std_vc, cv_mean_vc + cv_std_vc,
-                alpha=0.10, color="C1")
-ax.axvline(best_depth, color="gray", linestyle=":", linewidth=1.5,
-           label=f"Best CV depth = {best_depth}")
-ax.set_xlabel("max_depth  (complexity →)")
-ax.set_ylabel("RMSE")
-ax.set_title(f"Validation curve: Decision Tree on {DATASET_SLUG} dataset, predicting {TARGET}", fontsize=12)
-ax.legend()
-ax.grid(True, alpha=0.3)
-fig.tight_layout()
-fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_validation_curve.png")
-plt.show()
+plot_validation_curve(
+    DEPTH_RANGE, tr_mean_vc, tr_std_vc, cv_mean_vc, cv_std_vc,
+    best_param=best_depth,
+    best_label=f"Best CV depth = {best_depth}",
+    xlabel="max_depth  (complexity →)",
+    ylabel="RMSE",
+    title=f"Validation curve: Decision Tree on {DATASET_SLUG} dataset, predicting {TARGET}",
+    save_path=PLOT_DIR / f"{DATASET_SLUG}_validation_curve.png",
+)
 print(f"Best max_depth={best_depth}  CV RMSE={best_cv:.3f}  (sweep: depth 1–{DEPTH_RANGE[-1]})")
 print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_validation_curve.png'}")
 
@@ -170,50 +146,34 @@ Procedure (30 random seeds):
 A wider box = more sensitivity to which samples happen to land in validation.
 CV boxes should be narrower because each point is an average of 5 folds,
 not a single lucky/unlucky draw.
+
+Uses the best-depth tree from cell [4] (no scaler — trees are scale-invariant)
+so the stability result is for the model this script is actually about.
 """
-pipe_linear = Pipeline([
-    ("scaler", StandardScaler()),
-    ("model",  LinearRegression()),
-])
+tree_best = DecisionTreeRegressor(max_depth=best_depth, random_state=0)
 
 N_SEEDS = 30
 single_scores, cv_scores_stability = [], []
 
 for seed in range(N_SEEDS):
     X_tr, X_va, y_tr, y_va = train_test_split(X, y, test_size=0.2, random_state=seed)
-    pipe_linear.fit(X_tr, y_tr)
-    single_scores.append(np.sqrt(mean_squared_error(y_va, pipe_linear.predict(X_va))))
+    tree_best.fit(X_tr, y_tr)
+    single_scores.append(np.sqrt(mean_squared_error(y_va, tree_best.predict(X_va))))
 
     cv_fold_obj = KFold(n_splits=cv_folds, shuffle=True, random_state=seed)
-    cv_run = cross_val_score(pipe_linear, X, y, cv=cv_fold_obj,
+    cv_run = cross_val_score(tree_best, X, y, cv=cv_fold_obj,
                              scoring="neg_root_mean_squared_error")
     cv_scores_stability.append(-cv_run.mean())
 
 single_s = pd.Series(single_scores,        name="Single 80/20")
 cv_s     = pd.Series(cv_scores_stability,  name=f"{cv_folds}-fold CV (mean)")
 
-fig, ax = plt.subplots(figsize=(6, 5))
-bp = ax.boxplot(
-    [single_scores, cv_scores_stability],
-    tick_labels=["Single 80/20 split", f"{cv_folds}-fold CV (mean)"],
-    patch_artist=True,
-    widths=0.4,
+plot_cv_stability(
+    single_scores, cv_scores_stability, cv_folds,
+    ylabel=f"RMSE  (Decision Tree, max_depth={best_depth})",
+    title=f"Evaluation stability ({N_SEEDS} random seeds)\n{DATASET_SLUG} dataset, predicting {TARGET}",
+    save_path=PLOT_DIR / f"{DATASET_SLUG}_cv_stability.png",
 )
-bp["boxes"][0].set_facecolor("tab:orange")
-bp["boxes"][1].set_facecolor("tab:blue")
-for patch in bp["boxes"]:
-    patch.set_alpha(0.6)
-
-ax.set_ylabel("RMSE  (linear model on full feature set)")
-ax.set_title(
-    f"Evaluation stability ({N_SEEDS} random seeds)\n"
-    f"{DATASET_SLUG} dataset, predicting {TARGET}"
-)
-fig.tight_layout()
-fig.savefig(PLOT_DIR / f"{DATASET_SLUG}_cv_stability.png")
-plt.show()
 print(f"Single 80/20: mean={single_s.mean():.3f}  std={single_s.std():.3f}")
 print(f"{cv_folds}-fold CV:  mean={cv_s.mean():.3f}  std={cv_s.std():.3f}  ({N_SEEDS} seeds)")
 print(f"Saved: {PLOT_DIR / f'{DATASET_SLUG}_cv_stability.png'}")
-
-# %% [6]

@@ -14,7 +14,7 @@
 - Chinstrap appears only on Dream; Gentoo only on Biscoe. If `island` were added as a model feature, what information would it duplicate?
 - Under what deployment condition would including `island` cause a silent error?
 
-**Q2** · `eda.plot-assumption`
+**Q2** · `eda.general`
 
 - Cell [6] shows body mass histograms split by sex within each species.
 - Which species shows the largest male-female mass gap in these histograms?
@@ -30,7 +30,7 @@
 
 - Still cell [8]: What is the single change applied between the two panels (one change at a time)?
 
-**Q5** · `eda.plot-assumption`
+**Q5** · `eda.general`
 
 - Cell [9] shows a scatter of `flipper_length_mm` vs `bill_length_mm` coloured by species.
 - How many distinct clusters are visible, and which pair of species overlaps most?

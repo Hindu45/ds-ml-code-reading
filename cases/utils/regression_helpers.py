@@ -109,8 +109,8 @@ def plot_error_curves(
     """
     fig, axes = plt.subplots(2, 2, figsize=(12, 8))
     for ax, (alphas, tr, va, model_name, step, best_a) in zip(axes.flat, specs):
-        ax.plot(alphas, tr, label="train", color="tab:blue")
-        ax.plot(alphas, va, label="val",   color="tab:orange")
+        ax.plot(alphas, tr, label="train", color="tab:blue",   marker="o", markersize=3)
+        ax.plot(alphas, va, label="val",   color="tab:orange", marker="o", markersize=3)
         ax.axvline(best_a, color="tab:green", linestyle="--", linewidth=1.2,
                    label=f"best α = {best_a:.3f}")
         ax.set_xlabel("α (regularisation strength)")

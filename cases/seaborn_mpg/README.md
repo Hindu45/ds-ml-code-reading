@@ -64,8 +64,8 @@ Each row is one car model/trim tested for fuel efficiency in miles per gallon (m
 
 - [`mpg_01_eda.py`](mpg_01_eda.py): distributions, missing data, time trend, origin comparison, multicollinearity heatmap, acceleration suppressor
 - [`mpg_02_ridge_lasso.py`](mpg_02_ridge_lasso.py): Ridge, Lasso, OLS baseline, hyperparameter grid search, coefficient paths, three-way split
-- [`mpg_03_bias_variance_decisiontree.py`](bias_variance_tradeoff_decisiontree.py): learning curves, validation curve, max_depth as complexity dial, CV stability vs single split
-- [`mpg_04_bias_variance_ridge.py`](bias_variance_tradeoff_ridge.py): learning curves, validation curve, alpha as complexity dial, CV stability vs single split
+- [`mpg_03_bias_variance_ridge.py`](bias_variance_tradeoff_ridge.py): learning curves, validation curve, alpha as complexity dial, CV stability vs single split
+- [`mpg_04_bias_variance_decisiontree.py`](bias_variance_tradeoff_decisiontree.py): same as above: max_depth as complexity dial
 
 **General intent of scripts:** regularized regression
 

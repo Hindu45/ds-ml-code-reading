@@ -15,14 +15,16 @@ NUMERIC_COLS = ["cylinders", "displacement", "horsepower", "weight", "accelerati
 # %%
 """ [2] Load & inspect
 398 rows, 9 columns. One row = one car model/trim.
-Numeric predictors: cylinders, displacement (cu. in.), horsepower, weight (lbs),
-  acceleration (0-60 mph time in sec), model_year (70–82 = 1970–1982).
-Categorical: origin (usa / europe / japan), name (car model string — dropped later).
+Numeric predictors: cylinders, displacement (cu. in.), horsepower, weight (lbs), acceleration (0-60 mph time in sec), model_year.
+Categorical: origin, name (car model string — dropped later).
 Target: mpg (miles per gallon).
 6 rows have horsepower missing — the only missingness in the dataset.
 """
 df_raw = sns.load_dataset("mpg")
 print(df_raw.shape)
+print(f"numeric: {df_raw.select_dtypes('number').columns.tolist()}")
+print(f"categorical: {df_raw.select_dtypes('object').columns.tolist()}")
+print(f"origin categories: {df_raw['origin'].unique().tolist()}")
 print(df_raw.isnull().sum()[df_raw.isnull().sum() > 0])
 
 # %%
@@ -49,11 +51,11 @@ fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
 axes[0].hist(df["mpg"], bins=30, edgecolor="none")
 axes[0].set_xlabel("mpg")
-axes[0].set_title("mpg — raw")
+axes[0].set_title("mpg: raw")
 
 axes[1].hist(1 / df["mpg"], bins=30, color="tab:orange", edgecolor="none")
 axes[1].set_xlabel("1 / mpg  (gallons per mile)")
-axes[1].set_title("Fuel consumption — physical inverse")
+axes[1].set_title("Fuel consumption: physical inverse")
 
 fig.tight_layout()
 fig.savefig(PLOT_DIR / "mpg_target_dist.png")
@@ -91,7 +93,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_by_year.png'}")
 """ [6] mpg by origin
 Japanese and European cars are concentrated in the 4-cylinder economy segment,
 yielding higher median mpg. US cars dominate the 6- and 8-cylinder range.
-Origin is partly a proxy for cylinders/displacement — they're correlated predictors.
+Origin is partly a proxy for cylinders/displacement: they're correlated predictors.
 """
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 

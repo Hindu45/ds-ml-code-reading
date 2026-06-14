@@ -20,7 +20,7 @@
 - Cell [4] shows side-by-side box plots (sex, smoker, day, time). Which predictor shows the least difference in `tip_pct` median across its groups?
 - Does a small median difference imply that the predictor should be excluded from a model?
 
-**Q3** · `eda.plot-assumption`
+**Q3** · `eda.general`
 
 - Cells [4] and [5] use box plots with overlaid strip plots. Why could strip plots be useful here? What do the strips reveal that the box plot alone cannot show?
 - As a side: Is there anything you would improve in the visual appearance of the two plots?

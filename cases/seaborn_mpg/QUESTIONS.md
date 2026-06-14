@@ -2,25 +2,25 @@
 
 - [mpg_01_eda.py](#questions-mpg_01_edapy)
 - [mpg_02_ridge_lasso.py](#questions-mpg_02_ridge_lassopy)
-- [mpg_03_bias_variance_decisiontree.py](#questions-mpg_03_bias_variance_decisiontreepy)
-- [mpg_04_bias_variance_ridge.py](#questions-mpg_04_bias_variance_ridgepy)
+- [mpg_03_bias_variance_ridge.py](#questions-mpg_03_bias_variance_ridgepy)
+- [mpg_04_bias_variance_decisiontree.py](#questions-mpg_04_bias_variance_decisiontreepy)
 
 ## Questions `mpg_01_eda.py`
 
 **Script topics** · EDA: Data Quality · EDA: Distributions · EDA: Correlations
 
-**Q1** · `eda.sampling-bias`
+**Q1** · `eda.data-sampling`
 
-- In cell [2], what years and origins does this dataset cover (model years 70-82, origins usa/europe/japan)?
+- According to cell [2], what years and origins does this dataset cover?
 - Which combination of origin and cylinder count is likely over-represented?
 - How might this sampling affect a model trained to predict mpg for modern cars?
 
-**Q2** · `process.simplicity`
+**Q2** · `transform.trade-pred`
 
 - In cell [3], the six rows with missing horsepower are dropped. What assumption does this embed about why the values are missing?
-- The docstring says the missingness is "likely unreported in early emissions records." What category of missingness (MCAR, MAR, MNAR) does that imply, and why does it matter for the drop-vs-impute decision?
+- What category of missingness would you assume (MCAR, MAR, MNAR), and in what sense does it matter for the drop-vs-impute decision?
 
-**Q3** · `eda.plot-assumption`
+**Q3** · `eda.general`
 
 - Cell [4] plots raw mpg and the inverse 1/mpg side by side. Describe the shape of each distribution.
 - Which would be the better modeling target for ordinary least-squares regression, and why?
@@ -36,136 +36,143 @@
 - Cell [6] shows median mpg of 31.6 (japan), 26.0 (europe), and 18.5 (usa). The docstring says origin is "partly a proxy for cylinders/displacement."
 - What would happen to the estimated coefficient of `origin` if `cylinders` and `displacement` were also in the model?
 
-**Q6** · `eda.plot-assumption`
+**Q6** · `eda.data-sampling`
 
-- In cell [9], which three predictors have pairwise correlations above 0.9?
-- Why does high multicollinearity inflate OLS coefficient variance?
-- How does the script connect this observation to the choice of model in the next script?
+- Cell [7] counts only 4 three-cylinder and 3 five-cylinder cars out of 392 total. What does this mean for per-cyclinder-group statistics in the mpg dataset?
+- If you evaluated a model's error separately for each cylinder class, would you trust the 3-cylinder and 5-cylinder estimates equally to the 4-cylinder estimate? Why or why not?
 
-**Q7** · `eda.plot-assumption`
+**Q7** · `eda.general` · `explain.importance`
+
+- Cell [8] ranks weight (-0.832), displacement (-0.805), horsepower and cylinders (both -0.778) as the strongest correlators with mpg.
+- Cell [9] shows these same four features are intercorrelated at r > 0.9. Would you expect all four to add independent predictive power, or mostly redundant information?
+
+**Q8** · `eda.general`
+
+- In cell [9]: Why does high multicollinearity of features inflate OLS coefficient variance?
+- What does this imply for the choice of model?
+
+**Q9** · `eda.general`
 
 - Cell [10] shows a curved, not straight-line, relationship between mpg and weight. What does this imply for a linear model trained on raw weight values?
-- The docstring claims 1/mpg scales more linearly with weight. How could you check that claim using only the plots already generated?
+- The docstring claims 1/mpg scales more linearly with weight. Given the plot in cell [10] - do you think this is correct?
 
-**Q8** · `eda.confounding`
+**Q10** · `eda.general`
 
-- Cell [12] describes the positive correlation between `acceleration` and mpg as a "suppression effect." Explain in plain language why the sign is misleading.
+- Cell [11] flags horsepower outliers with a z-score threshold of |z| > 2.5, which assumes the variable is roughly symmetric.
+- The cell's own docstring notes horsepower has "a long right tail." Does a z-score threshold suit a skewed variable, or could it misfire on one side?
+
+**Q11** · `eda.confounding`
+
+- Cell [12] describes the positive correlation between `acceleration` and mpg as a "suppression effect". This means that when adding a third variable to an analysis unexpectedly strengthens or reverses the observed relationship between an independent and a dependent target variable. Explain this in your own words.
 - Which feature, when added to a regression alongside `acceleration`, would most likely reverse or weaken its coefficient?
-
-**Q9** · `eda.sampling-bias`
-
-- Cell [7] counts only 4 three-cylinder and 3 five-cylinder cars out of 392 total. What does this mean for per-group statistics in the mpg-by-cylinders plot?
-- If you evaluated a model's error separately for each cylinder class, would you trust the 3-cylinder and 5-cylinder estimates equally to the 4-cylinder estimate? Why or why not?
 
 ---
 
 ## Questions `mpg_02_ridge_lasso.py`
 
-**Script topics** · Data Splits · Regularized Regression · Hyperparameter Optimization
+**Script topics** · Data Splits · Regularized Regression (Ridge + Lasso) · Hyperparameter Optimization
 
-**Q1** · `pipeline.data-leakage`
+**Q1** · `transform.trace-pred`
 
-- At lines 58-59, `StandardScaler` and `y_scaler` are fitted on `X_train` and `y_train` only. What would go wrong if they were fitted on the full dataset before splitting?
-- Identify every place in the script where `x_scaler.transform` or `y_scaler.transform` is called and confirm each call uses the correct split.
+- `pd.get_dummies(..., drop_first=True)` keeps `origin_japan` and `origin_usa` but drops `origin_europe`. What does that imply for reading the two dummy coefficients?
 
 **Q2** · `pipeline.validation`
 
-- Lines 52-53 create a three-way split (train / val / test). Why is a dedicated validation set needed instead of a simple two-way train/test split?
+- Cell [3] create a three-way split (train / val / test). Why is a dedicated validation set needed instead of a simple two-way train/test split?
 
-**Q3** · `modeling.algorithm`
+**Q3** · `pipeline.data-leakage`
 
-- What penalty term does Ridge add to the OLS loss? How does Lasso's penalty differ?
-- Given the multicollinearity found in the EDA (r > 0.9 among three features), why is Ridge a reasonable starting choice over plain OLS?
+- In cell [4], `StandardScaler` is fitted on `X_train` and `y_train` only. What would go wrong if they were fitted on the full dataset before splitting?
 
-**Q4** · `modeling.param-effect`
+**Q4** · `evaluation.overfit`
 
-- `LASSO_TRAIN_FRAC = 0.50` (line 29) makes the Lasso grid train on only half the training data. What practical problem is this addressing?
-- What is the trade-off: what do you gain, and what do you risk, by reducing the training fraction for one model but not the other?
+- The output of cell [5] shows OLS train RMSE = 3.397 mpg but val RMSE = 3.050 mpg: validation error is lower than training error. Does this mean the model generalizes unusually well, or is there another explanation?
+- The val and test sets each contain only 79 rows (see cell [3]). How does set size affect the reliability of a single RMSE estimate?
 
-**Q5** · `training.convergence`
+**Q5** · `modeling.algorithm`
 
-- The error-curves plot (lines 117-126) shows both a coarse and a fine alpha grid for Ridge and Lasso. What information does the coarse grid provide that motivates the fine grid?
-- If the validation curve showed no clear minimum within the searched range, what would you conclude and what would you do next?
+- Cell [6]: What penalty term does Ridge add to the OLS loss? How does Lasso's penalty differ?
+- Given the multicollinearity found in the EDA script (r > 0.9 among three features), why is Ridge a reasonable starting choice over plain OLS?
 
-**Q6** · `explain.coeff-meaning`
+**Q6** · `modeling.param-effect`
 
-- The coefficient-paths plot (lines 129-148) shows each feature's coefficient as alpha increases. Describe how Ridge paths differ from Lasso paths in shape.
-- If a Lasso coefficient reaches exactly zero, what does that mean for the feature's role in predictions?
-
-**Q7** · `process.controlled-change`
-
-- The final evaluation block (lines 151-164) compares OLS, Ridge, and Lasso on the test set (OLS RMSE = 3.256 mpg, Ridge RMSE = 3.314 mpg, Lasso RMSE = 3.249 mpg). How many things change between OLS and Ridge, and between Ridge and Lasso?
-- Is this comparison sufficient to attribute any RMSE difference solely to regularisation? What else could contribute?
-
-**Q8** · `modeling.param-effect`
-
-- `ALPHA_MAX = 0.1` (line 28) caps the alpha search range fed into both `ALPHAS_COARSE` and `ALPHAS_FINE`. Predict what would happen to the validation RMSE curve if `ALPHA_MAX` were extended to 10: at which end of the x-axis would you see a change, and what shape would it take?
+- `ALPHA_MAX = 0.1` defined in cell [0] caps the alpha search range, which is fed into both `ALPHAS_COARSE` and `ALPHAS_FINE`. Would it make sense to extend `ALPHA_MAX` to 1.0 to consider the full range of trade-offs between loss functions and regularization?
 - How does changing the search *range* differ from changing the search *density* (number of grid points), and which problem does each address?
 
-**Q9** · `evaluation.overfit`
+**Q7** · `pipeline.trace-pred` · `pipeline.error`
 
-- The output shows OLS train RMSE = 3.397 mpg but val RMSE = 3.050 mpg: validation error is lower than training error. Does this mean the model generalises unusually well, or is there another explanation?
-- The val and test sets each contain only 79 rows. How does set size affect the reliability of a single RMSE estimate?
+- Cell [8]: The error-curves plot uses RMSE error instead of the loss function that  includes MSE + the regularization term. Why?
+- Observe that validation errors are consistently *below* train errors. Why can that be and what does that mean?
+- Might there be a small-sample split artifact involved (see the output of cell [3])? _Note: Results from script 3 will help clarify this further_
+
+**Q8** · `training.convergence`
+
+- Cell [8]: The error-curves plot shows both a coarse and a fine alpha grid for Ridge and Lasso. What information does the coarse grid provide that motivates the fine grid?
+
+**Q9** · `explain.coeff-meaning`
+
+- Cell [9]: The coefficient-paths plot shows each feature's coefficient as alpha increases. Describe how Ridge paths differ from Lasso paths in shape.
+- If a Lasso coefficient reaches exactly zero, what does that mean for the feature's role in predictions?
 
 **Q10** · `explain.coeff-meaning`
 
-- The output reports "Lasso zeroed 4/8 features at alpha = 0.016." The 8 features are the 6 numeric columns plus 2 origin dummies. Given the high correlations among engine-size features found in `mpg_01_eda.py`, which 4 features would you predict are zeroed?
-- Lasso test RMSE (3.249 mpg) is nearly identical to OLS (3.256 mpg) despite using only 4 active features. What does this tell you about the information content of the zeroed features?
+- Cell [10]: The output reports "Lasso zeroed 4/8 features at alpha = 0.014." Given the high correlations among engine-size features found in `mpg_01_eda.py`, which 4 features would you predict are zeroed?
+- Lasso test RMSE (3.260 mpg) is nearly identical to OLS (3.256 mpg) despite using only 4 active features. What does this tell you about the information content of the zeroed features?
 
-**Q11** · `process.reproducibility`
+**Q11** · `evaluation.metrics`
 
-- Lines 103-104 use `rng = np.random.default_rng(42)` to subsample training rows for the Lasso grid, while lines 52-53 use `random_state=42` in `train_test_split`. These are two different random-number systems (NumPy Generator vs. legacy random state).
-- Would the Lasso grid results change if only the `train_test_split` seed were changed? Would they change if only the `rng` seed were changed?
-- What does using two independent seeds mean for reproducing the exact output?
+- Cell [11] plots predicted vs. actual mpg for Ridge and Lasso.
+- What can this scatter reveal about model behaviour, e.g. systematic over- or under-prediction, that a single RMSE number can't?
 
----
-
-## Questions `mpg_03_bias_variance_decisiontree.py`
-
-**Script topics** · Underfitting and Overfitting · Decision Trees
-
-**Q1** · `training.convergence`
-
-- Cell [3] plots learning curves for `max_depth=2` and a fully grown tree. Describe the expected shape of the train and CV lines in each panel as training size increases.
-- The high-bias panel has a small train-CV gap. Does a small gap always mean the model generalises well?
-
-**Q2** · `training.convergence`
-
-- Cell [4] sweeps `max_depth` from 1 to 15. At which end of the x-axis does underfitting dominate, and at which end does overfitting dominate?
-- The output shows best CV RMSE = 3.754 at max_depth = 8. What criterion selects this value, and why does the train-CV gap continue to widen for depths above 8 while CV RMSE stays roughly flat?
-
-**Q3** · `process.controlled-change`
-
-- Cell [5] compares a single 80/20 split with 5-fold CV over 30 random seeds. What exactly varies across the 30 seeds in each procedure?
-- The output shows single-split std = 0.296 vs. CV std = 0.024 across 30 seeds (a ~12x difference). What accounts for this difference, and what does it imply for using a single holdout split on a 392-row dataset?
-
-**Q4** · `training.convergence`
-
-- The high-variance panel in cell [3] prints train RMSE as `-0.000` at every training size. Explain why a decision tree with `max_depth=None` produces this value and whether it represents a numerical error.
-- Knowing that train RMSE = 0 regardless of training size, what is the only useful signal left in the high-variance panel's chart?
-
-**Q5** · `process.controlled-change`
-
-- Cell [5] runs the stability experiment using a `LinearRegression` pipeline (line 189), not the `DecisionTreeRegressor` from cells [3]-[4]. How many things change between the decision-tree cells and this stability cell?
-- Does the stability result (CV std = 0.024) apply to the decision tree at max_depth = 8, or only to the linear model? What would you need to run to get a fair comparison for the decision tree?
-
----
-
-## Questions `mpg_04_bias_variance_ridge.py`
+## Questions `mpg_03_bias_variance_ridge.py`
 
 **Script topics** · Underfitting and Overfitting · Regularized Regression
 
-**Q1** · `process.controlled-change`
+**Q1** · `evaluation.baseline`
 
-- Compare this script's structure with `mpg_03_bias_variance_decisiontree.py` (cells [2]-[5] and the config block in cell [1]). What is the single design choice that differs between them?
-- What does this structural similarity reveal about the purpose of both scripts, and how does it connect to the research question stated in the top docstring?
+- Cell [2] prints the target's mean (23.45) and std (7.80).
+- A baselines that always predicts the mean would score RMSE ≈ 7.8. How does that compare to the tuned CV RMSE of ≈3.86 from cell [4]?
 
 **Q2** · `training.convergence`
 
-- Cell [4]'s docstring says the validation curve's U-shape is "mirrored" compared to `mpg_03`. Explain why increasing alpha causes CV RMSE to degrade on the right side of the plot, whereas in the decision-tree script it was larger max_depth that degraded CV on the right.
-- The output shows best alpha=0.0100, the smallest alpha in the sweep, while `mpg_03` found best max_depth=8, an interior point. What does each boundary result tell you about how sensitive this dataset is to each complexity dial?
+- Cell [3] compares learning curves for α=1000 (high bias) vs. α=0.01 (low regularisation). Both end with a gap of ~0.6-0.7 mpg at the largest training size.
+- What do these learning curves tell you about the model? Would more data still help?
 
-**Q3** · `evaluation.overfit`
+**Q3** · `training.convergence`
 
-- Cell [5] prints single-split std=0.296 and CV std=0.024, numerically identical to the output from `mpg_03`. Does this mean Ridge and LinearRegression perform identically on this dataset, or is there a simpler explanation?
-- What would you need to change in the experiment to determine whether these stability numbers are driven by dataset size or model choice?
+- Cell [4]: Explain why increasing alpha causes CV RMSE to degrade on the right side of the plot.
+- Is their a mathematical argument that training error is always rising with regularization?
+
+**Q4** · `evaluation.overfit`
+
+- Cell [5] compares single-split vs. CV.
+- Revisit Q7 from `mpg_02_ridge_lasso.py`: a single split there showed validation RMSE running below training RMSE. Does the ~12x gap between single-split std (0.296) and CV std (0.024) shown here support the "small-sample split artifact" explanation for that pattern, or point to a different cause?
+- Also consider cell [4] for your answer, where CV RMSE is clearly shown to be higher than train RMSE throughout.
+
+---
+
+## Questions `mpg_04_bias_variance_decisiontree.py`
+
+**Script topics** · Underfitting and Overfitting · Decision Trees
+
+**Q1** · `process.controlled-change`
+
+- Compare this script's structure with `mpg_03_bias_variance_ridge.py` (cells [2]-[5] and the config block in cell [1]). What is the single design choice that differs between them?
+- What does this structural similarity reveal about the purpose of both scripts?
+
+**Q2** · `quality.abstraction`
+
+- Cell [2]'s docstring says swapping the dataset means swapping this cell. Cell [1]'s config block lists "diamonds," "taxis," "healthexp" as alternatives.
+- If you switched to `healthexp` (`FEATURES=["Year","Spending_USD"]`, `TARGET="Life_Expectancy"`), would anything outside cells [1]-[2] need to change?
+
+**Q3** · `training.convergence`
+
+- Cell [4]: The output here shows best max_depth=8 for decision trees which is an interior point, while `mpg_03` script showed best alpha=0.01 to be the smallest alpha in the sweep. What does each boundary result tell you about how sensitive this dataset is to each complexity dial?
+
+_**Note:** To compare plots from both scripts, after running both once, you can check out the plots folder where the plots have been saved._
+
+**Q4** · `process.controlled-change` · `modeling.algorithm`
+
+- Cell [5]: Here you see the the *identical* stability experiment (30 seeds, single 80/20 split vs. 5-fold CV) on the same data. What's the one thing that differs between the two cell [5]s from `mpg_03` and `mpg_04`, and why does that make the comparison fair?
+- Ridge's CV std is ~12x smaller than its single-split std. The tree's CV std is only ~2.7x smaller than its single-split std. Why does averaging across folds stabilize the evaluation so much more for Ridge than for the tree?
+- Connect this to cell [3]'s diagnosis of the fully-grown tree as "high variance": Might the same sensitivity to which rows land in the training set be showing up here too?

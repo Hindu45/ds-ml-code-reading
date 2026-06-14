@@ -53,17 +53,16 @@ Note: Translating between business and data-science metrics is shared ground. Se
 > 
 > **Strong answers:** name violated assumptions or confounds; propose a corrective step
 
-`eda.plot-assumption`
-- Describe the shape of this relationship and name the modeling assumption it violates.
-- Would a transformation fix this? How would you check?
-- Which feature not shown here might improve the "situation"?
+`eda.general`
+- Describe the shape of this relationship and name the modeling assumption it violates. Might a feature not shown here improve the "situation"?
+- From the plot/statistics about this feature: What could be its meaning for the task?
 
 `eda.confounding`
 - If you included only this variable in a regression, would its coefficient sign be misleading?
 - Could there be an unused/unmeasured variable driving the pattern you see?
 - What would happen to the coefficient if the grouping variable were omitted (Simpson's paradox)?
 
-`eda.sampling-bias`
+`eda.data-sampling`
 - What population does this dataset actually represent?
 - Which groups might be over- or under-represented?
 - How would results change if the sample were drawn differently?

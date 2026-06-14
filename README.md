@@ -1,14 +1,10 @@
 # Data Science: Code and Output Reading
 
-Data science, like programming in general, can increasingly be streamlined using AI coding support. However:
-
-> Even if code comes from somewhere else, you'll need to be able to make critical decisions in data science. What question to solve? What models to use? Is the pipeline right? What does this output mean for our next steps?
+Data science, like programming in general, can increasingly be streamlined using AI coding support. However, even if code comes from somewhere else, you'll need to be able to make critical decisions in data science. What question to solve? What models to use? Is the pipeline right? What does this output mean for our next steps?
 
 Understanding code pattern, concepts, and the general data-science process is nowadays more important than, for example, memorizing exact syntax. Recognizing conceptual and procedural elements in code as well as being able to reason on results will remain a valuable skill.
 
 To train this skill, this repo provides ready-made data-science scripts along with code and output reading questions.
-
-> **Important note:** This repo is read-only. You'll never push changes back. Scripts are meant to be read and run as-is.
 
 > **Important note:** This repo is read-only. You'll never push changes back. Scripts are meant to be read and run as-is.
 

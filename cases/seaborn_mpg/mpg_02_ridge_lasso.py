@@ -1,5 +1,7 @@
 """ Can we predict a car's fuel efficiency (mpg) from engine and body specs?"""
 
+# %%
+""" [0] Imports & config"""
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -24,7 +26,6 @@ CAT_COLS     = ["origin"]
 
 RANDOM_STATE     = 42
 ALPHA_MAX        = 0.1
-LASSO_TRAIN_FRAC = 0.50          # dataset is small (392 rows), use half for Lasso grid
 LASSO_MAX_ITER   = 2_000
 LASSO_TOL        = 1e-4
 LASSO_N_FINE     = 51
@@ -53,6 +54,8 @@ print(f"X: {X_np.shape}  features: {feature_names}")
 X_trainval, X_test,  y_trainval, y_test  = train_test_split(X_np, y, test_size=0.20, random_state=RANDOM_STATE)
 X_train,    X_val,   y_train,    y_val   = train_test_split(X_trainval, y_trainval, test_size=0.25, random_state=RANDOM_STATE)
 print(f"Train {len(y_train):,}  |  Val {len(y_val):,}  |  Test {len(y_test):,}")
+for label, y_split in [("Train", y_train), ("Val  ", y_val), ("Test ", y_test)]:
+    print(f"  {label}  mpg mean={y_split.mean():.2f}  std={y_split.std():.2f}")
 
 # %%
 """ [4] Fit z-score scalers on train only; apply to all splits"""
@@ -104,16 +107,11 @@ print(f"Ridge coarse  best α={best_ridge_c:.3f}  val RMSE={min(ridge_val_c) * y
 print(f"Ridge fine    best α={best_ridge_f:.3f}  val RMSE={min(ridge_val_f) * y_std:.3f} mpg")
 
 # %%
-""" [7] Lasso grid search on a 50 % subsample (convergence on small dataset)"""
+""" [7] Lasso grid search on the training set"""
 ALPHAS_FINE_LASSO = np.linspace(0.0, ALPHA_MAX, LASSO_N_FINE)
 
-rng = np.random.default_rng(RANDOM_STATE)
-lasso_idx  = rng.choice(len(y_train_s), size=int(len(y_train_s) * LASSO_TRAIN_FRAC), replace=False)
-X_lasso_tr = X_train_s[lasso_idx]
-y_lasso_tr = y_train_s[lasso_idx]
-
-lasso_train_c, lasso_val_c = lasso_grid(ALPHAS_COARSE,      X_lasso_tr, y_lasso_tr, X_val_s, y_val_s, max_iter=LASSO_MAX_ITER, tol=LASSO_TOL, desc="Lasso coarse")
-lasso_train_f, lasso_val_f = lasso_grid(ALPHAS_FINE_LASSO,  X_lasso_tr, y_lasso_tr, X_val_s, y_val_s, max_iter=LASSO_MAX_ITER, tol=LASSO_TOL, desc="Lasso fine  ")
+lasso_train_c, lasso_val_c = lasso_grid(ALPHAS_COARSE,      X_train_s, y_train_s, X_val_s, y_val_s, max_iter=LASSO_MAX_ITER, tol=LASSO_TOL, desc="Lasso coarse")
+lasso_train_f, lasso_val_f = lasso_grid(ALPHAS_FINE_LASSO,  X_train_s, y_train_s, X_val_s, y_val_s, max_iter=LASSO_MAX_ITER, tol=LASSO_TOL, desc="Lasso fine  ")
 
 best_lasso_c = ALPHAS_COARSE[int(np.argmin(lasso_val_c))]
 best_lasso_f = ALPHAS_FINE_LASSO[int(np.argmin(lasso_val_f))]
@@ -145,7 +143,7 @@ lasso_paths: list[np.ndarray] = []
 m_path = Lasso(alpha=1.0, warm_start=True, max_iter=LASSO_MAX_ITER, tol=LASSO_TOL)
 for a in tqdm(ALPHAS_FINE_LASSO, desc="Lasso path", ncols=70):
     m_path.alpha = max(float(a), 1e-6)
-    m_path.fit(X_lasso_tr, y_lasso_tr)
+    m_path.fit(X_train_s, y_train_s)
     lasso_paths.append(m_path.coef_.copy())
 
 plot_coef_paths(
