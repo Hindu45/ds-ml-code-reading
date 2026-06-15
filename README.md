@@ -44,7 +44,12 @@ Both scripts create `.venv/`, set up the import path, and install only the packa
 python install-missing-packages.py
 ```
 
-This writes a `root_imports.pth` file automatically inside the venv, which accomplishes that imports relative to repo root work.
+This writes a `root_imports.pth` file inside the venv. Its content is
+```Python
+import sys, pathlib
+sys.path.insert(0, str(pathlib.Path(sys.prefix).parent))
+```
+These lines can also be used in any script that needs imports relative to repo root if the automatic approach fails.
 
 ---
 

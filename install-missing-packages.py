@@ -145,11 +145,10 @@ def _write_root_pth() -> None:
     import sysconfig
 
     site_pkg = Path(sysconfig.get_path("purelib"))
-    pth_line = (
-        "import sys, pathlib; "
-        "_v = next(p for p in pathlib.Path(__file__).resolve().parents if (p / 'pyvenv.cfg').exists()); "
-        "sys.path.insert(0, str(_v.parent))\n"
-    )
+    # sys.prefix is the venv root; its parent is the repo root.
+    # Simpler and more reliable than __file__-based traversal: __file__ in a
+    # .pth import-line refers to site.py, not the .pth file itself.
+    pth_line = "import sys, pathlib; sys.path.insert(0, str(pathlib.Path(sys.prefix).parent))\n"
     pth = site_pkg / "root_imports.pth"
     pth.write_text(pth_line, encoding="utf-8")
     print(f"[install-missing] Written {pth}")
