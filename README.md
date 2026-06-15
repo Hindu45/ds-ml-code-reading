@@ -31,10 +31,20 @@ This course is working with VS Code as the primary IDE.
 **Install VS Code Extensions:** In VS Code, make sure you have the [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python) and [Jupyter](https://marketplace.visualstudio.com/items?itemName=ms-toolsai.jupyter) extensions installed.
 
 **Setup Python environment:**
-- **Default (lab) setup:** On Windows, run `setup-venv.bat` to create a virtual environment and install all dependencies in one step (double-click from file explorer or run `.\setup-venv.bat` from terminal). What the script does:
-    - The script creates `.venv/`, writes the path file for imports, and runs `install-missing-packages.py`.
-    - Then, the script checks the base Python installation for existing site-packages and installs only what is missing from `requirements.txt`. This is storage efficient in lab sessions where the Python base distribution already has many data-science packages.
-- **Private laptops:** If you work on a private laptop, you may need to accomodate for you specific machine, particularly make sure you have an appropriate base Python installation. If you use `setup-venv.bat`, you may need to switch the Python path inside.
+- **Windows (lab):** Run `setup-venv.bat` (double-click or `.\setup-venv.bat` in terminal).
+- **Linux / Mac:** Run `bash setup-venv.sh` in a terminal from the repo root.
+
+Both scripts create `.venv/`, set up the import path, and install only the packages missing from `requirements.txt` (storage-efficient when a base Python already has data-science packages).
+
+- **Private laptops:** If your Python is not found automatically, add its path to the `PYTHON_CANDIDATES` list at the top of the respective setup script.
+
+**If you set up your own venv without the scripts**, you still need to register the repo root so imports resolve. With your venv active, run once from the repo root:
+
+```bash
+python install-missing-packages.py
+```
+
+This writes a `root_imports.pth` file automatically inside the venv, which accomplishes that imports relative to repo root work.
 
 ---
 

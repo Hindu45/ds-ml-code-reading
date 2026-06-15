@@ -134,8 +134,30 @@ def _ensure_system_site_packages() -> None:
     )
 
 
+def _write_root_pth() -> None:
+    """Write a cross-platform .pth that adds the repo root to sys.path.
+
+    Uses an import-line (executed by site.py at startup) that locates the venv
+    root via pyvenv.cfg, then inserts its parent (the repo root). This avoids
+    hardcoding an absolute path and works on Windows (Lib/site-packages) and
+    Linux (lib/pythonX.Y/site-packages) alike.
+    """
+    import sysconfig
+
+    site_pkg = Path(sysconfig.get_path("purelib"))
+    pth_line = (
+        "import sys, pathlib; "
+        "_v = next(p for p in pathlib.Path(__file__).resolve().parents if (p / 'pyvenv.cfg').exists()); "
+        "sys.path.insert(0, str(_v.parent))\n"
+    )
+    pth = site_pkg / "root_imports.pth"
+    pth.write_text(pth_line, encoding="utf-8")
+    print(f"[install-missing] Written {pth}")
+
+
 def main() -> int:
     _ensure_system_site_packages()
+    _write_root_pth()
 
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(

@@ -47,10 +47,6 @@ if errorlevel 1 (
 echo [setup] .venv created.
 
 :run_install
-echo [setup] Writing root_imports.pth ...
-set SITE_PKG=%VENV_DIR%\Lib\site-packages
-echo %SCRIPT_DIR:~0,-1%>"%SITE_PKG%\root_imports.pth"
-
 echo [setup] Running install-missing.py ...
 "%VENV_DIR%\Scripts\python.exe" "%SCRIPT_DIR%install-missing-packages.py"
 set EXIT_CODE=%errorlevel%
