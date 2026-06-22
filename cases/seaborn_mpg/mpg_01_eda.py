@@ -23,16 +23,15 @@ Target: mpg (miles per gallon).
 df_raw = sns.load_dataset("mpg")
 print(df_raw.shape)
 print(f"numeric: {df_raw.select_dtypes('number').columns.tolist()}")
-print(f"categorical: {df_raw.select_dtypes('object').columns.tolist()}")
+print(f"categorical: {df_raw.select_dtypes('str').columns.tolist()}")
 print(f"origin categories: {df_raw['origin'].unique().tolist()}")
+print(f"model_year range: {df_raw['model_year'].min()} – {df_raw['model_year'].max()}")
 print(df_raw.isnull().sum()[df_raw.isnull().sum() > 0])
 
 # %%
 """ [3] Missing horsepower
-The 6 missing rows include 4 US cars and 2 European (Renault), spanning model years
-71–82 — scattered across the dataset, not clustered at the start.
-The reason for missingness is unclear; the mix of origins and years makes a single
-MNAR explanation unlikely.
+The 6 missing rows include 4 US cars and 2 European (Renault), spanning model years 71–82 — scattered across the dataset, not clustered at the start.
+The reason for missingness is unclear; the mix of origins and years makes a single MNAR explanation unlikely.
 We drop them (1.5% loss) rather than impute, to keep the analysis transparent.
 """
 missing_hp = df_raw[df_raw["horsepower"].isnull()]
@@ -43,9 +42,7 @@ print(f"\nAfter dropping missing horsepower: {len(df):,} rows")
 
 # %%
 """ [4] Target distribution — mpg
-mpg is moderately right-skewed (range 9–46.6). The fuel consumption inverse
-(gallons-per-mile = 1/mpg) is closer to symmetric and physically more natural,
-but mpg is the industry-standard reported quantity — we model it directly.
+mpg is moderately right-skewed (range 9–46.6). The fuel consumption inverse (gallons-per-mile = 1/mpg) is closer to symmetric and physically more natural, but mpg is the industry-standard reported quantity — we model it directly.
 """
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
 
@@ -64,9 +61,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_target_dist.png'}")
 
 # %%
 """ [5] mpg over time — the oil crisis signal
-Model year runs 1970–1982. Fleet average mpg rises sharply after the 1973 oil
-embargo and again after 1979. This time trend is a strong predictor even after
-controlling for engine specs — it captures regulatory and design-era effects.
+Model year runs 1970–1982. Fleet average mpg rises sharply after the 1973 oil embargo and again after 1979. This time trend is a strong predictor even after controlling for engine specs — it captures regulatory and design-era effects.
 """
 by_year = df.groupby("model_year")["mpg"].agg(["mean", "median", "std"]).reset_index()
 
@@ -91,8 +86,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_by_year.png'}")
 
 # %%
 """ [6] mpg by origin
-Japanese and European cars are concentrated in the 4-cylinder economy segment,
-yielding higher median mpg. US cars dominate the 6- and 8-cylinder range.
+Japanese and European cars are concentrated in the 4-cylinder economy segment, yielding higher median mpg. US cars dominate the 6- and 8-cylinder range.
 Origin is partly a proxy for cylinders/displacement: they're correlated predictors.
 """
 fig, axes = plt.subplots(1, 2, figsize=(10, 4))
@@ -118,9 +112,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_by_origin.png'}")
 
 # %%
 """ [7] mpg by cylinders
-Cylinders takes only 5 discrete values (3, 4, 5, 6, 8) — it behaves more like
-an ordinal category than a continuous feature. The 3- and 5-cylinder classes
-are rare (4 and 3 cars respectively). The 4 vs 8 gap is the dominant signal.
+Cylinders takes only 5 discrete values (3, 4, 5, 6, 8) — it behaves more like an ordinal category than a continuous feature. The 3- and 5-cylinder classes are rare (4 and 3 cars respectively). The 4 vs 8 gap is the dominant signal.
 """
 cyl_counts = df["cylinders"].value_counts().sort_index()
 
@@ -148,8 +140,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_by_cylinders.png'}")
 Weight (-0.83) and displacement (-0.81) are the strongest negative predictors;
 horsepower and cylinders follow, both at -0.78.
 Model year is a strong positive predictor — the time trend visible above.
-Acceleration correlates positively because lighter/smaller-engined cars both
-accelerate slowly (high 0-60 time) and get better mpg.
+Acceleration correlates positively because lighter/smaller-engined cars both accelerate slowly (high 0-60 time) and get better mpg.
 """
 corr_with_mpg = df[NUMERIC_COLS + ["mpg"]].corr()["mpg"].drop("mpg").sort_values()
 
@@ -169,8 +160,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_feature_corr.png'}")
 # %%
 """ [9] Multicollinearity among predictors
 Cylinders, displacement, and weight are highly intercorrelated (r > 0.9).
-Including all three gives the model redundant information and inflates OLS
-coefficient variance — the primary motivation for Ridge regularisation.
+Including all three gives the model redundant information and inflates OLS coefficient variance — the primary motivation for Ridge regularisation.
 """
 corr_matrix = df[NUMERIC_COLS].corr()
 
@@ -192,10 +182,8 @@ print(f"Saved: {PLOT_DIR / 'mpg_predictor_corr.png'}")
 
 # %%
 """ [10] mpg vs weight and displacement — non-linearity
-The relationship between mpg and heavy predictors (weight, displacement) is
-curved: mpg drops steeply for lighter cars but flattens for heavy ones.
-This is physically expected — fuel consumption (1/mpg) scales more linearly
-with weight. Linear regression will underfit this curvature.
+The relationship between mpg and heavy predictors (weight, displacement) is curved: mpg drops steeply for lighter cars but flattens for heavy ones.
+This is physically expected — fuel consumption (1/mpg) scales more linearly with weight. Linear regression will underfit this curvature.
 """
 fig, axes = plt.subplots(1, 2, figsize=(11, 4))
 
@@ -214,9 +202,7 @@ print(f"Saved: {PLOT_DIR / 'mpg_vs_weight_displacement.png'}")
 
 # %%
 """ [11] Horsepower outliers
-Horsepower has a long right tail (max 230 hp vs mean ~104). These are high-
-displacement American muscle cars from the early 1970s. They also have the
-lowest mpg values in the dataset — horsepower and efficiency trade-off directly.
+Horsepower has a long right tail (max 230 hp vs mean ~104). These are high-displacement American muscle cars from the early 1970s. They also have the lowest mpg values in the dataset — horsepower and efficiency trade-off directly.
 """
 hp_z = (df["horsepower"] - df["horsepower"].mean()) / df["horsepower"].std()
 outliers = df[hp_z.abs() > 2.5][["name", "origin", "model_year", "cylinders", "horsepower", "mpg"]]
@@ -238,10 +224,8 @@ print(f"Saved: {PLOT_DIR / 'mpg_horsepower_outliers.png'}")
 
 # %%
 """ [12] Acceleration — the confounded predictor
-Acceleration (0–60 mph time in seconds) is positively correlated with mpg,
-but this is a suppression effect: slow acceleration = small/light engine = good mpg.
-It is NOT that driving slowly improves fuel economy. High-acceleration outliers
-(short 0-60 times, low mpg) are the muscle cars from the horsepower analysis.
+Acceleration (0–60 mph time in seconds) is positively correlated with mpg, but this is a suppression effect: slow acceleration = small/light engine = good mpg.
+It is NOT that driving slowly improves fuel economy. High-acceleration outliers (short 0-60 times, low mpg) are the muscle cars from the horsepower analysis.
 """
 fig, ax = plt.subplots(figsize=(6, 4))
 sc = ax.scatter(df["acceleration"], df["mpg"],

@@ -154,7 +154,7 @@ def plot_coef_paths(
         ax.set_xlabel("α")
         ax.set_ylabel("Coefficient")
         ax.set_title(title)
-        ax.legend(fontsize=6, ncol=2, loc="upper right")
+        ax.legend(fontsize=10, ncol=2, loc="upper right")
     fig.tight_layout()
     fig.savefig(save_path)
     plt.show()

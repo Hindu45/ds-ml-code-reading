@@ -34,7 +34,6 @@
 
 - Cell [9] shows a scatter of `flipper_length_mm` vs `bill_length_mm` coloured by species.
 - How many distinct clusters are visible, and which pair of species overlaps most?
-- Name one feature not shown in this plot that might better separate the overlapping pair, and cite the cell from the script where the evidence appears.
 
 ---
 
@@ -88,6 +87,7 @@
 - Cell [1]'s `CONFIGS` list adds one feature at a time while keeping the model class, split, and random state identical across all five configurations.
 - What makes this a valid controlled comparison of feature value?
 - Which single feature addition produces the largest jump in macro F1? Look at cell [3] output values.
+- What would happen to this observed "jump" if you changed the order in which to add features?
 
 ---
 

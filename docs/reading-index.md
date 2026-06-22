@@ -15,7 +15,7 @@ Suggested dataset sequence:
 2. [Penguins: Palmer Penguins Morphology](#penguins-palmer-penguins-morphology)
 3. [MPG: Automobile Fuel Efficiency](#mpg-automobile-fuel-efficiency)
 
-The questions for datasets not listed here are not yet finalized.
+> **Questions for datasets not listed here are not yet finalized.**
 
 Additionally: [Topic Reference](#topic-reference)
 

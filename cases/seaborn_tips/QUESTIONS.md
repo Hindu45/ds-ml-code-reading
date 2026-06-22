@@ -63,7 +63,7 @@
 
 **Q4** · `modeling.algorithm`
 
-- Cell [7] implements an optimizer from scratch. What is it called (_yes, a simple one_)?
+- Cell [7] implements an optimizer from scratch. What is it called (_yes, this is a simple question_)?
 - What quantity does `grad`represent mathematically?
 - Where exactly in the loop is that quantity computed?
 
@@ -94,7 +94,7 @@
 
 **Q2** · `transform.feature-engineering`
 
-- Still cell [2] `pd.get_dummies(..., drop_first=True)`. What does `drop_first` do?
+- Cell [2]: `pd.get_dummies(..., drop_first=True)`. What does `drop_first` do?
 - What are the consequences of removing it for the OLS solution?
 
 **Q3** · `transform.trace-pred`
