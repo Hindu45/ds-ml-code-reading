@@ -23,7 +23,7 @@ Target: mpg (miles per gallon).
 df_raw = sns.load_dataset("mpg")
 print(df_raw.shape)
 print(f"numeric: {df_raw.select_dtypes('number').columns.tolist()}")
-print(f"categorical: {df_raw.select_dtypes('str').columns.tolist()}")
+print(f"categorical: {df_raw.select_dtypes('object').columns.tolist()}")
 print(f"origin categories: {df_raw['origin'].unique().tolist()}")
 print(f"model_year range: {df_raw['model_year'].min()} – {df_raw['model_year'].max()}")
 print(df_raw.isnull().sum()[df_raw.isnull().sum() > 0])
