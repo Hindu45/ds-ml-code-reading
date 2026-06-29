@@ -204,3 +204,5 @@ fig.tight_layout()
 fig.savefig(PLOT_DIR / "penguins_flipper_vs_bill.png")
 plt.show()
 print(f"Saved: {PLOT_DIR / 'penguins_flipper_vs_bill.png'}")
+
+# %%
